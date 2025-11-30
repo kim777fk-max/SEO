@@ -14,19 +14,22 @@ export default async function handler(request, response) {
     if (useSpa) {
       // SPAモードを試行
       try {
-        // Browserless.ioを優先的に使用
-        if (process.env.BROWSERLESS_TOKEN) {
+        // 優先順位: ScrapingBee → Browserless.io → 通常fetch
+        if (process.env.SCRAPINGBEE_API_KEY) {
+          const html = await renderWithScrapingBee(url);
+          return response.status(200).json({ success: true, html });
+        } else if (process.env.BROWSERLESS_TOKEN) {
           const html = await renderWithBrowserless(url);
           return response.status(200).json({ success: true, html });
         }
 
-        // Browserless.ioが設定されていない場合、通常fetchにフォールバック
-        console.warn("BROWSERLESS_TOKEN not set, falling back to simple fetch");
+        // どちらも設定されていない場合、通常fetchにフォールバック
+        console.warn("SCRAPINGBEE_API_KEY or BROWSERLESS_TOKEN not set, falling back to simple fetch");
         const html = await simpleFetch(url);
         return response.status(200).json({
           success: true,
           html,
-          warning: "SPAモード用のBROWSERLESS_TOKENが設定されていません。通常モードで取得しました。完全なSPA対応にはBrowserless.ioのAPIキーが必要です。"
+          warning: "SPAモード用のAPIキー（SCRAPINGBEE_API_KEY または BROWSERLESS_TOKEN）が設定されていません。完全なSPA対応には、いずれかのサービスのAPIキーが必要です。無料プランはこちら: https://www.scrapingbee.com/ または https://www.browserless.io/"
         });
       } catch (spaError) {
         console.error("SPA rendering failed:", spaError);
@@ -68,6 +71,31 @@ async function simpleFetch(url) {
   }
 
   return await response.text();
+}
+
+/**
+ * ScrapingBeeを使用したSPAレンダリング
+ * 無料プラン: 1,000リクエスト/月
+ * https://www.scrapingbee.com/
+ */
+async function renderWithScrapingBee(url) {
+  const apiKey = process.env.SCRAPINGBEE_API_KEY;
+  const apiUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=false&wait=2000`;
+
+  console.log("Starting ScrapingBee rendering for:", url);
+
+  const response = await fetch(apiUrl);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("ScrapingBee error:", response.status, errorText);
+    throw new Error(`ScrapingBee error: ${response.status}`);
+  }
+
+  const html = await response.text();
+  console.log("ScrapingBee content retrieved, length:", html.length);
+
+  return html;
 }
 
 /**
