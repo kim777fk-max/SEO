@@ -120,6 +120,10 @@ class SEODiagnosticApp {
           // SPAモード: サーバーレス関数でJavaScriptレンダリング
           this.updateStatus('JavaScriptをレンダリング中...（SPAモード、処理に時間がかかります）');
           htmlData = await this.fetchSPAHtml(url);
+          // URLを追加（fetchSPAHtmlはurlを返さないため）
+          if (!htmlData.url) {
+            htmlData.url = url;
+          }
         } else {
           // 通常モード
           this.updateStatus('URLからHTMLを取得中...');
