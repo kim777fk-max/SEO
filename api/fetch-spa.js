@@ -1,5 +1,3 @@
-import { chromium } from 'playwright-core';
-
 export default async function handler(request, response) {
   const { url, spa } = request.query;
 
@@ -16,17 +14,29 @@ export default async function handler(request, response) {
     if (useSpa) {
       // SPAモードを試行
       try {
-        const html = await renderSpaWithPlaywright(url);
-        return response.status(200).json({ success: true, html });
-      } catch (spaError) {
-        console.error("SPA rendering failed, falling back to simple fetch:", spaError);
+        // Browserless.ioを優先的に使用
+        if (process.env.BROWSERLESS_TOKEN) {
+          const html = await renderWithBrowserless(url);
+          return response.status(200).json({ success: true, html });
+        }
 
-        // SPAモードが失敗した場合、シンプルなfetchにフォールバック
+        // Browserless.ioが設定されていない場合、通常fetchにフォールバック
+        console.warn("BROWSERLESS_TOKEN not set, falling back to simple fetch");
         const html = await simpleFetch(url);
         return response.status(200).json({
           success: true,
           html,
-          warning: "SPAモードは現在Vercel環境で制限があるため、通常モードで取得しました。JavaScriptで生成されるコンテンツは含まれていない可能性があります。"
+          warning: "SPAモード用のBROWSERLESS_TOKENが設定されていません。通常モードで取得しました。完全なSPA対応にはBrowserless.ioのAPIキーが必要です。"
+        });
+      } catch (spaError) {
+        console.error("SPA rendering failed:", spaError);
+
+        // エラー時は通常fetchにフォールバック
+        const html = await simpleFetch(url);
+        return response.status(200).json({
+          success: true,
+          html,
+          warning: "SPA HTMLの取得に失敗したため、通常モードで取得しました。JavaScriptで生成されるコンテンツは含まれていない可能性があります。"
         });
       }
     } else {
@@ -61,48 +71,40 @@ async function simpleFetch(url) {
 }
 
 /**
- * SPAレンダリング（Playwright + Chromium）
- * Playwrightはサーバーレス環境での動作が最適化されている
+ * Browserless.ioを使用したSPAレンダリング
+ * 無料プラン: 月6時間（約360リクエスト）
+ * https://www.browserless.io/
  */
-async function renderSpaWithPlaywright(url) {
-  console.log("Starting Playwright SPA rendering for:", url);
+async function renderWithBrowserless(url) {
+  const token = process.env.BROWSERLESS_TOKEN;
+  const browserlessUrl = `https://chrome.browserless.io/content?token=${token}`;
 
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-blink-features=AutomationControlled',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote'
-    ]
+  console.log("Starting Browserless.io rendering for:", url);
+
+  const response = await fetch(browserlessUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url: url,
+      gotoOptions: {
+        waitUntil: 'networkidle0',
+        timeout: 60000
+      },
+      waitFor: 2000 // JavaScriptの実行を2秒待つ
+    })
   });
 
-  console.log("Browser launched successfully");
-
-  try {
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    });
-
-    const page = await context.newPage();
-
-    await page.goto(url, {
-      waitUntil: 'networkidle',
-      timeout: 60000
-    });
-
-    // JavaScriptの実行を待つ
-    await page.waitForTimeout(2000);
-
-    const content = await page.content();
-    console.log("Page content retrieved, length:", content.length);
-
-    return content;
-  } finally {
-    await browser.close();
-    console.log("Browser closed");
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Browserless.io error:", response.status, errorText);
+    throw new Error(`Browserless.io error: ${response.status}`);
   }
+
+  const html = await response.text();
+  console.log("Browserless.io content retrieved, length:", html.length);
+
+  return html;
 }
+

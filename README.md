@@ -163,7 +163,10 @@ AI機能を含む完全な機能を利用するには、Vercelにデプロイす
      - `OPENAI_API_KEY`: OpenAI APIキー
      - `CLAUDE_API_KEY`: Claude APIキー
      - `GEMINI_API_KEY`: Google Gemini APIキー
-   - 少なくとも1つのAPIキーを設定することを推奨
+     - `BROWSERLESS_TOKEN`: Browserless.io トークン（SPAモード用）
+   - 少なくとも1つのAI APIキーを設定することを推奨
+   - **SPAモードを使う場合はBROWSERLESS_TOKENが必須**
+     - https://www.browserless.io/ で無料トークンを取得（月6時間無料）
 
 4. **デプロイ**
    - 「Deploy」ボタンをクリック

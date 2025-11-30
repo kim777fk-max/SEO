@@ -8,8 +8,6 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "playwright-core": "^1.40.0",
-    "playwright-chromium": "^1.40.0",
     "highlight.js": "^11.9.0"
   }
 }
