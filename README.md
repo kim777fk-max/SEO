@@ -2,6 +2,14 @@
 
 Google公式ガイドラインに基づくSEO診断・スコアリング・AI改善提案ツール
 
+[![Deploy to GitHub Pages](https://github.com/kim777fk-max/SEO/workflows/Deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/kim777fk-max/SEO/actions)
+
+## 🌐 デモサイト
+
+**https://kim777fk-max.github.io/SEO/**
+
+上記URLから直接アクセスして、すぐにSEO診断を試すことができます！
+
 ## 概要
 
 このアプリケーションは、URLを入力するだけでGoogle Search Centralの公式ガイドラインに基づいてSEO診断を行い、100点満点でスコア化し、AI（OpenAI/Claude）による改善提案を提供します。
@@ -50,9 +58,21 @@ Google公式ガイドラインに基づくSEO診断・スコアリング・AI改
 
 ## 使い方
 
-### 基本的な使用方法
+### オンラインで使用（推奨）
 
-1. **index.htmlをブラウザで開く**
+GitHub Pagesで公開されているので、すぐに使えます：
+
+👉 **https://kim777fk-max.github.io/SEO/**
+
+### ローカルで使用
+
+1. **リポジトリをクローン**
+   ```bash
+   git clone https://github.com/kim777fk-max/SEO.git
+   cd SEO
+   ```
+
+2. **ローカルサーバーを起動**
    ```bash
    # ローカルサーバーを起動（推奨）
    python -m http.server 8000
@@ -60,14 +80,19 @@ Google公式ガイドラインに基づくSEO診断・スコアリング・AI改
    npx serve
    ```
 
-2. **URLまたはHTMLを入力**
+3. **ブラウザで開く**
+   - http://localhost:8000 にアクセス
+
+### アプリの使用方法
+
+1. **URLまたはHTMLを入力**
    - URLモード: 診断したいWebページのURLを入力
    - HTMLモード: HTMLコンテンツを直接貼り付け
 
-3. **診断を実行**
+2. **診断を実行**
    - 「SEO診断を開始」ボタンをクリック
 
-4. **結果を確認**
+3. **結果を確認**
    - 総合スコア
    - カテゴリ別スコア
    - 検出された問題点
@@ -117,6 +142,32 @@ Google公式ガイドラインに基づくSEO診断・スコアリング・AI改
 - ✅ モダンでクリーンなUI/UX
 - ✅ アクセシビリティ対応
 - ✅ 印刷対応
+
+## デプロイ
+
+### GitHub Pagesでの公開
+
+このリポジトリはGitHub Actionsで自動デプロイされます。
+
+#### 初回設定
+
+1. **GitHub Pagesを有効化**
+   - GitHubリポジトリページにアクセス
+   - `Settings` > `Pages` に移動
+   - `Source` を `GitHub Actions` に設定
+
+2. **自動デプロイ**
+   - `main` ブランチまたは `claude/seo-diagnostic-app-*` ブランチにプッシュすると自動的にデプロイされます
+   - デプロイ状況は `Actions` タブで確認できます
+
+3. **公開URL**
+   - https://kim777fk-max.github.io/SEO/
+
+#### カスタムドメインの設定（オプション）
+
+1. リポジトリの `Settings` > `Pages` で `Custom domain` を設定
+2. DNSレコードを設定
+3. `Enforce HTTPS` を有効化
 
 ## 今後の拡張予定
 
