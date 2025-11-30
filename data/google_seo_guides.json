@@ -1,0 +1,50 @@
+[
+  {
+    "id": "title",
+    "description": "Each page should have a concise, descriptive <title> tag under 60 characters.",
+    "weight": 15,
+    "evaluate": "title && title.length <= 60"
+  },
+  {
+    "id": "meta_description",
+    "description": "Provide a unique meta description between 80 and 160 characters.",
+    "weight": 10,
+    "evaluate": "metaDescription && metaDescription.length >= 80 && metaDescription.length <= 160"
+  },
+  {
+    "id": "headings",
+    "description": "Use a single H1 and hierarchical headings (H2-H4) with relevant text.",
+    "weight": 15,
+    "evaluate": "headings && headings.h1.length === 1 && headings.h2.length >= 1"
+  },
+  {
+    "id": "images",
+    "description": "Images should include descriptive alt attributes.",
+    "weight": 10,
+    "evaluate": "images && images.total > 0 && images.withAlt === images.total"
+  },
+  {
+    "id": "links",
+    "description": "Links should use descriptive anchor text and avoid excessive nofollow.",
+    "weight": 10,
+    "evaluate": "links && links.total > 0 && links.withDescriptiveText >= Math.ceil(links.total * 0.6)"
+  },
+  {
+    "id": "structured_data",
+    "description": "Structured data should be valid JSON-LD with recognizable @type.",
+    "weight": 15,
+    "evaluate": "structuredData && structuredData.valid === true && structuredData.items.length > 0"
+  },
+  {
+    "id": "mobile_friendly",
+    "description": "Viewport meta tag for mobile friendliness should be present.",
+    "weight": 10,
+    "evaluate": "metaViewport === true"
+  },
+  {
+    "id": "https",
+    "description": "Pages should load over HTTPS.",
+    "weight": 15,
+    "evaluate": "startsWithHttps === true"
+  }
+]

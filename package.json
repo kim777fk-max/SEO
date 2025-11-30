@@ -1,0 +1,15 @@
+{
+  "name": "seo-audit-app",
+  "version": "1.0.0",
+  "description": "SEO diagnostic web app following Google guidelines",
+  "type": "module",
+  "scripts": {
+    "lint": "echo 'no lint configured'",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+    "@sparticuz/chromium-min": "^141.0.0",
+    "highlight.js": "^11.9.0",
+    "puppeteer-core": "^24.23.1"
+  }
+}
