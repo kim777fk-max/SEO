@@ -670,17 +670,8 @@ class SEODiagnosticApp {
    */
   async fetchSPAHtml(url) {
     try {
-      const response = await fetch('/api/fetch-spa', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: url,
-          waitTime: 3000, // JavaScriptの実行を待つ時間
-          waitUntil: 'networkidle0'
-        })
-      });
+      const encodedUrl = encodeURIComponent(url);
+      const response = await fetch(`/api/fetch-spa?url=${encodedUrl}&spa=1`);
 
       if (!response.ok) {
         // 404エラーの場合は、サーバーレス関数が利用できないことを通知
@@ -688,26 +679,74 @@ class SEODiagnosticApp {
           throw new Error('SPAモードはサーバーレス関数が必要です。GitHub Pagesでは利用できません。Vercelにデプロイするか、通常モードをご利用ください。');
         }
 
-        const error = await response.json().catch(() => ({ message: 'SPA HTMLの取得に失敗しました' }));
-        throw new Error(error.message || 'SPA HTMLの取得に失敗しました');
+        const error = await response.json().catch(() => ({ error: 'SPA HTMLの取得に失敗しました' }));
+        throw new Error(error.error || error.message || 'SPA HTMLの取得に失敗しました');
       }
 
       const result = await response.json();
+
+      // warningがある場合は表示
+      if (result.warning) {
+        console.warn('SPA Mode Warning:', result.warning);
+        this.showWarning(result.warning);
+      }
 
       if (!result.success) {
         throw new Error(result.error || 'SPA HTMLの取得に失敗しました');
       }
 
-      return result;
+      return { success: true, html: result.html };
 
     } catch (error) {
       console.error('SPA fetch error:', error);
-
-      // エラーメッセージをユーザーに表示
-      alert(`SPAモードエラー: ${error.message}`);
-
-      throw error;
+      return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * 警告メッセージを表示
+   */
+  showWarning(message) {
+    const warningDiv = document.createElement('div');
+    warningDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 16px;
+      max-width: 400px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+    `;
+    warningDiv.innerHTML = `
+      <div style="display: flex; align-items: start; gap: 12px;">
+        <span style="font-size: 24px;">⚠️</span>
+        <div>
+          <strong style="display: block; margin-bottom: 8px;">注意</strong>
+          <p style="margin: 0; color: #856404;">${message}</p>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" style="
+          background: none;
+          border: none;
+          font-size: 20px;
+          cursor: pointer;
+          padding: 0;
+          margin-left: auto;
+        ">×</button>
+      </div>
+    `;
+
+    document.body.appendChild(warningDiv);
+
+    // 10秒後に自動的に閉じる
+    setTimeout(() => {
+      if (warningDiv.parentElement) {
+        warningDiv.remove();
+      }
+    }, 10000);
   }
 
   /**
