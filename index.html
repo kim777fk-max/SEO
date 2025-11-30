@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Google公式ガイドラインに基づくSEO診断ツール。URLを入力するだけで、SEOスコアと改善提案を取得できます。">
+  <title>SEO診断アプリ - Google公式ガイドライン準拠</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="header">
+    <div class="header-content">
+      <h1>🔍 SEO診断アプリ</h1>
+      <p>Google公式ガイドラインに基づくSEO診断・スコアリング・AI改善提案</p>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <div class="container">
+    <!-- 入力セクション -->
+    <section class="card input-section">
+      <h2>📝 URLまたはHTMLを入力</h2>
+
+      <!-- 入力モード選択 -->
+      <div class="input-mode">
+        <label>
+          <input type="radio" name="input-mode" value="url" checked>
+          URLから取得
+        </label>
+        <label>
+          <input type="radio" name="input-mode" value="html">
+          HTMLを直接入力
+        </label>
+      </div>
+
+      <!-- URL入力 -->
+      <div id="url-input-section">
+        <div class="input-group">
+          <label for="url-input">診断するURL</label>
+          <input
+            type="url"
+            id="url-input"
+            placeholder="https://example.com"
+            autocomplete="url">
+        </div>
+      </div>
+
+      <!-- HTML直接入力 -->
+      <div id="html-input-section" style="display: none;">
+        <div class="input-group">
+          <label for="html-url-input">URL（オプション）</label>
+          <input
+            type="text"
+            id="html-url-input"
+            placeholder="https://example.com">
+        </div>
+        <div class="input-group">
+          <label for="html-input">HTMLコンテンツ</label>
+          <textarea
+            id="html-input"
+            placeholder="HTMLコンテンツをここに貼り付けてください..."></textarea>
+        </div>
+      </div>
+
+      <!-- 診断ボタン -->
+      <button id="analyze-btn" class="btn btn-primary btn-full">
+        <span>🚀</span>
+        <span>SEO診断を開始</span>
+      </button>
+
+      <!-- ローディング -->
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p id="status-message" class="status-message">処理中...</p>
+      </div>
+    </section>
+
+    <!-- API設定セクション -->
+    <section class="card">
+      <h2>⚙️ AI設定（オプション）</h2>
+      <div class="api-settings">
+        <div class="api-info">
+          💡 OpenAI APIまたはClaude APIキーを設定すると、より詳細なAI改善提案が利用できます。
+          未設定の場合はルールベース分析を使用します。
+        </div>
+
+        <div class="input-group">
+          <label for="api-type">APIタイプ</label>
+          <select id="api-type">
+            <option value="openai">OpenAI (GPT-4)</option>
+            <option value="claude">Claude (Anthropic)</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="api-key">APIキー</label>
+          <input
+            type="password"
+            id="api-key"
+            placeholder="sk-...">
+        </div>
+
+        <button id="save-api-btn" class="btn btn-success">
+          💾 設定を保存
+        </button>
+      </div>
+    </section>
+
+    <!-- 結果セクション -->
+    <section id="results-section" class="card" style="display: none;">
+      <h2>📊 診断結果</h2>
+
+      <!-- スコア概要 -->
+      <div class="score-overview">
+        <!-- メインスコア -->
+        <div class="score-card">
+          <div class="score-circle-container">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <circle class="score-circle-bg" cx="100" cy="100" r="90"></circle>
+              <circle id="score-circle" class="score-circle" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="score-text">
+              <span id="score-value" class="score-value">0</span>
+              <span id="score-label" class="score-label">計算中...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 情報カード -->
+        <div class="info-card">
+          <h3>診断URL</h3>
+          <p id="analyzed-url" class="info-label">-</p>
+        </div>
+
+        <div class="info-card">
+          <h3>検出された問題</h3>
+          <div id="total-issues" class="info-value">0</div>
+          <p class="info-label">件</p>
+        </div>
+
+        <div class="info-card">
+          <h3>重大な問題</h3>
+          <div id="critical-issues" class="info-value">0</div>
+          <p class="info-label">件</p>
+        </div>
+      </div>
+
+      <!-- タブナビゲーション -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="overview">概要</button>
+        <button class="tab-btn" data-tab="issues">問題点</button>
+        <button class="tab-btn" data-tab="suggestions">AI提案</button>
+        <button class="tab-btn" data-tab="details">詳細データ</button>
+      </div>
+
+      <!-- タブコンテンツ: 概要 -->
+      <div id="overview-tab" class="tab-content active">
+        <h3>カテゴリ別スコア</h3>
+        <div id="category-results" class="category-results">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: 問題点 -->
+      <div id="issues-tab" class="tab-content">
+        <h3>検出された問題点</h3>
+        <div id="issues-list">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: AI提案 -->
+      <div id="suggestions-tab" class="tab-content">
+        <h3>AI改善提案</h3>
+        <div id="ai-suggestions">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: 詳細データ -->
+      <div id="details-tab" class="tab-content">
+        <h3>詳細データ</h3>
+        <div id="detailed-data">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- フッター情報 -->
+    <section class="card" style="text-align: center; padding: var(--spacing-md);">
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        このツールは<a href="https://developers.google.com/search" target="_blank" rel="noopener" style="color: var(--primary-color);">Google Search Central</a>の公式ガイドラインに基づいています。
+      </p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: var(--spacing-xs);">
+        完全ローカル動作 | API設定はブラウザのLocalStorageに保存されます
+      </p>
+    </section>
+  </div>
+
+  <!-- JavaScriptモジュール読み込み -->
+  <script src="./modules/fetch_html.js"></script>
+  <script src="./modules/parser.js"></script>
+  <script src="./modules/scorer.js"></script>
+  <script src="./modules/ai_analyzer.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
