@@ -654,19 +654,30 @@ class SEODiagnosticApp {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        // 404エラーの場合は、サーバーレス関数が利用できないことを通知
+        if (response.status === 404) {
+          throw new Error('SPAモードはサーバーレス関数が必要です。GitHub Pagesでは利用できません。Vercelにデプロイするか、通常モードをご利用ください。');
+        }
+
+        const error = await response.json().catch(() => ({ message: 'SPA HTMLの取得に失敗しました' }));
         throw new Error(error.message || 'SPA HTMLの取得に失敗しました');
       }
 
       const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'SPA HTMLの取得に失敗しました');
+      }
+
       return result;
 
     } catch (error) {
       console.error('SPA fetch error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+
+      // エラーメッセージをユーザーに表示
+      alert(`SPAモードエラー: ${error.message}`);
+
+      throw error;
     }
   }
 

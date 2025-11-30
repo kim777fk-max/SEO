@@ -32,6 +32,7 @@ Google公式ガイドラインに基づくSEO診断・スコアリング・AI改
 ### 3. AI改善提案
 - **OpenAI GPT-4**: より詳細な改善提案（APIキー必要）
 - **Claude AI**: Anthropic Claudeによる分析（APIキー必要）
+- **Google Gemini**: Google Gemini Proによる分析（APIキー必要）
 - **ルールベース分析**: API未設定でも基本的な改善提案を提供
 
 ### 4. ビジュアル化
@@ -161,6 +162,7 @@ AI機能を含む完全な機能を利用するには、Vercelにデプロイす
    - 以下の環境変数を追加（オプション）:
      - `OPENAI_API_KEY`: OpenAI APIキー
      - `CLAUDE_API_KEY`: Claude APIキー
+     - `GEMINI_API_KEY`: Google Gemini APIキー
    - 少なくとも1つのAPIキーを設定することを推奨
 
 4. **デプロイ**
@@ -182,7 +184,11 @@ OPENAI_API_KEY=your-key-here
 
 ### GitHub Pagesでの公開（静的サイトのみ）
 
-**注意**: GitHub Pagesではサーバーレス関数が動作しないため、AI機能は利用できません。
+**注意**: GitHub Pagesではサーバーレス関数が動作しないため、以下の機能は利用できません：
+- AI改善提案機能（OpenAI/Claude/Gemini）
+- SPAモード（JavaScript レンダリング機能）
+
+基本的なSEO診断とルールベース分析は利用可能です。完全な機能を使用するには、Vercelにデプロイしてください。
 
 1. **GitHub Pagesを有効化**
    - `Settings` > `Pages` に移動

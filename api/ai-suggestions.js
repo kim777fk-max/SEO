@@ -5,6 +5,7 @@
  * 環境変数:
  * - OPENAI_API_KEY: OpenAI APIキー
  * - CLAUDE_API_KEY: Claude APIキー
+ * - GEMINI_API_KEY: Google Gemini APIキー
  */
 
 export default async function handler(req, res) {
@@ -36,9 +37,14 @@ export default async function handler(req, res) {
     }
 
     // APIタイプに応じてキーを取得
-    const apiKey = apiType === 'claude'
-      ? process.env.CLAUDE_API_KEY
-      : process.env.OPENAI_API_KEY;
+    let apiKey;
+    if (apiType === 'claude') {
+      apiKey = process.env.CLAUDE_API_KEY;
+    } else if (apiType === 'gemini') {
+      apiKey = process.env.GEMINI_API_KEY;
+    } else {
+      apiKey = process.env.OPENAI_API_KEY;
+    }
 
     if (!apiKey) {
       // APIキーが設定されていない場合はルールベース分析にフォールバック
@@ -50,6 +56,8 @@ export default async function handler(req, res) {
     let result;
     if (apiType === 'claude') {
       result = await callClaudeAPI(apiKey, scoreResults, parsedData);
+    } else if (apiType === 'gemini') {
+      result = await callGeminiAPI(apiKey, scoreResults, parsedData);
     } else {
       result = await callOpenAIAPI(apiKey, scoreResults, parsedData);
     }
@@ -183,6 +191,62 @@ async function callClaudeAPI(apiKey, scoreResults, parsedData) {
     success: true,
     suggestions: { generalAdvice: content, priorityIssues: [] },
     source: 'claude'
+  };
+}
+
+/**
+ * Google Gemini APIを呼び出し
+ */
+async function callGeminiAPI(apiKey, scoreResults, parsedData) {
+  const prompt = buildPrompt(scoreResults, parsedData);
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2000
+      }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates[0].content.parts[0].text;
+
+  // JSONをパース
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return {
+        success: true,
+        suggestions: JSON.parse(jsonMatch[0]),
+        source: 'gemini'
+      };
+    }
+  } catch (e) {
+    console.warn('JSON parse error, using raw content');
+  }
+
+  return {
+    success: true,
+    suggestions: { generalAdvice: content, priorityIssues: [] },
+    source: 'gemini'
   };
 }
 
