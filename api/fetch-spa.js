@@ -105,7 +105,8 @@ async function renderWithScrapingBee(url) {
  */
 async function renderWithBrowserless(url) {
   const token = process.env.BROWSERLESS_TOKEN;
-  const browserlessUrl = `https://chrome.browserless.io/content?token=${token}`;
+  // 正しいエンドポイント: production-sfo.browserless.io
+  const browserlessUrl = `https://production-sfo.browserless.io/content?token=${token}`;
 
   console.log("Starting Browserless.io rendering for:", url);
 
@@ -117,17 +118,16 @@ async function renderWithBrowserless(url) {
     body: JSON.stringify({
       url: url,
       gotoOptions: {
-        waitUntil: 'networkidle0',
+        waitUntil: 'networkidle2',
         timeout: 60000
-      },
-      waitFor: 2000 // JavaScriptの実行を2秒待つ
+      }
     })
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     console.error("Browserless.io error:", response.status, errorText);
-    throw new Error(`Browserless.io error: ${response.status}`);
+    throw new Error(`Browserless.io error: ${response.status} - ${errorText}`);
   }
 
   const html = await response.text();
