@@ -43,43 +43,56 @@ export default async function handler(req, res) {
     let result = null;
     let usedProvider = null;
 
+    console.log('AI Analysis - Available API Keys:', {
+      openai: !!process.env.OPENAI_API_KEY,
+      anthropic: !!process.env.ANTHROPIC_API_KEY,
+      gemini: !!process.env.GEMINI_API_KEY
+    });
+
     // 優先順位1: OpenAI
     if (process.env.OPENAI_API_KEY && (!apiType || apiType === 'openai')) {
+      console.log('Trying OpenAI API...');
       try {
         result = await callOpenAIAPI(process.env.OPENAI_API_KEY, scoreResults, parsedData);
         usedProvider = 'openai';
+        console.log('✅ OpenAI API succeeded');
       } catch (error) {
-        console.warn('OpenAI API failed:', error.message);
+        console.warn('❌ OpenAI API failed:', error.message);
       }
     }
 
     // 優先順位2: Claude (Anthropic)
     if (!result && process.env.ANTHROPIC_API_KEY && (!apiType || apiType === 'claude')) {
+      console.log('Trying Claude API...');
       try {
         result = await callClaudeAPI(process.env.ANTHROPIC_API_KEY, scoreResults, parsedData);
         usedProvider = 'claude';
+        console.log('✅ Claude API succeeded');
       } catch (error) {
-        console.warn('Claude API failed:', error.message);
+        console.warn('❌ Claude API failed:', error.message);
       }
     }
 
     // 優先順位3: Gemini
     if (!result && process.env.GEMINI_API_KEY && (!apiType || apiType === 'gemini')) {
+      console.log('Trying Gemini API...');
       try {
         result = await callGeminiAPI(process.env.GEMINI_API_KEY, scoreResults, parsedData);
         usedProvider = 'gemini';
+        console.log('✅ Gemini API succeeded');
       } catch (error) {
-        console.warn('Gemini API failed:', error.message);
+        console.warn('❌ Gemini API failed:', error.message);
       }
     }
 
     // すべてのAI APIが失敗した場合、ルールベース分析にフォールバック
     if (!result) {
-      console.log('All AI APIs unavailable, using rule-based suggestions');
+      console.log('⚠️ All AI APIs unavailable, using rule-based suggestions');
       const ruleBasedResult = generateRuleBasedSuggestions(scoreResults, parsedData);
       return res.status(200).json(ruleBasedResult);
     }
 
+    console.log(`✅ Using ${usedProvider} for AI analysis`);
     return res.status(200).json(result);
 
   } catch (error) {

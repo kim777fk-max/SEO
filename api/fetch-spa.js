@@ -80,7 +80,8 @@ async function simpleFetch(url) {
  */
 async function renderWithScrapingBee(url) {
   const apiKey = process.env.SCRAPINGBEE_API_KEY;
-  const apiUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=false&wait=2000`;
+  // JavaScript実行完了を待つ: 8秒
+  const apiUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(url)}&render_js=true&premium_proxy=false&wait=8000&wait_for=networkidle`;
 
   console.log("Starting ScrapingBee rendering for:", url);
 
@@ -118,22 +119,10 @@ async function renderWithBrowserless(url) {
     body: JSON.stringify({
       url: url,
       gotoOptions: {
-        waitUntil: ['load', 'networkidle2'],  // 複数条件: ページ読み込み完了 + ネットワーク安定
-        timeout: 90000  // タイムアウト延長: 90秒
+        waitUntil: 'networkidle0',  // ネットワークが完全に安定するまで待機
+        timeout: 90000  // タイムアウト: 90秒
       },
-      waitFor: 5000,  // JavaScript実行を確実に待つ: 5秒
-      // ページ全体が完全にレンダリングされるまで待機
-      addScriptTag: [{
-        content: `
-          new Promise((resolve) => {
-            if (document.readyState === 'complete') {
-              setTimeout(resolve, 2000);
-            } else {
-              window.addEventListener('load', () => setTimeout(resolve, 2000));
-            }
-          });
-        `
-      }]
+      waitFor: 8000  // JavaScript実行完了を待つ: 8秒（DOMレンダリング + 動的コンテンツ生成）
     })
   });
 
