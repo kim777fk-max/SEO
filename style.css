@@ -773,3 +773,61 @@ body {
 .text-left { text-align: left; }
 
 .hidden { display: none; }
+
+/* ===== HTMLソースビューアー ===== */
+.html-source-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.html-source-container {
+  background: #0d1117;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.html-source-container pre {
+  margin: 0;
+  padding: var(--spacing-md);
+  overflow-x: auto;
+}
+
+.html-source-container code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  white-space: pre;
+  display: block;
+}
+
+/* Highlight.js overrides */
+.hljs {
+  background: #0d1117 !important;
+  color: #c9d1d9 !important;
+  padding: 0 !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .html-source-container {
+    max-height: 400px;
+  }
+
+  .html-source-container code {
+    font-size: 0.75rem;
+  }
+
+  .html-source-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .html-source-toolbar button {
+    width: 100%;
+  }
+}

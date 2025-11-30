@@ -6,6 +6,10 @@
   <meta name="description" content="Google公式ガイドラインに基づくSEO診断ツール。URLを入力するだけで、SEOスコアと改善提案を取得できます。">
   <title>SEO診断アプリ - Google公式ガイドライン準拠</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
 </head>
 <body>
   <!-- ヘッダー -->
@@ -43,6 +47,15 @@
             id="url-input"
             placeholder="https://example.com"
             autocomplete="url">
+        </div>
+        <div class="input-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="spa-mode" style="width: 18px; height: 18px; cursor: pointer;">
+            <span>SPAモード（React/Vue/Angularなど、JavaScriptでレンダリングされるサイト）</span>
+          </label>
+          <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+            ⚠️ SPAモードは処理に時間がかかります（約10-30秒）
+          </small>
         </div>
       </div>
 
@@ -121,6 +134,7 @@
         <button class="tab-btn" data-tab="issues">問題点</button>
         <button class="tab-btn" data-tab="suggestions">AI提案</button>
         <button class="tab-btn" data-tab="details">詳細データ</button>
+        <button class="tab-btn" data-tab="html-source">HTMLソース</button>
       </div>
 
       <!-- タブコンテンツ: 概要 -->
@@ -152,6 +166,23 @@
         <h3>詳細データ</h3>
         <div id="detailed-data">
           <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: HTMLソース -->
+      <div id="html-source-tab" class="tab-content">
+        <h3>取得したHTMLソース</h3>
+        <div class="html-source-toolbar">
+          <button id="copy-html-btn" class="btn btn-primary" style="margin-bottom: var(--spacing-md);">
+            📋 HTMLをコピー
+          </button>
+          <button id="download-html-btn" class="btn btn-primary" style="margin-bottom: var(--spacing-md); margin-left: var(--spacing-sm);">
+            💾 HTMLをダウンロード
+          </button>
+          <span id="html-length-info" style="margin-left: var(--spacing-md); color: var(--text-secondary);"></span>
+        </div>
+        <div class="html-source-container">
+          <pre id="html-source-content"><code class="language-html"></code></pre>
         </div>
       </div>
     </section>

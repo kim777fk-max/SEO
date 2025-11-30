@@ -113,8 +113,18 @@ class SEODiagnosticApp {
           throw new Error('URLを入力してください');
         }
 
-        this.updateStatus('URLからHTMLを取得中...');
-        htmlData = await this.htmlFetcher.fetchWithFallback(url);
+        // SPAモードチェック
+        const spaMode = document.getElementById('spa-mode')?.checked || false;
+
+        if (spaMode) {
+          // SPAモード: サーバーレス関数でJavaScriptレンダリング
+          this.updateStatus('JavaScriptをレンダリング中...（SPAモード、処理に時間がかかります）');
+          htmlData = await this.fetchSPAHtml(url);
+        } else {
+          // 通常モード
+          this.updateStatus('URLからHTMLを取得中...');
+          htmlData = await this.htmlFetcher.fetchWithFallback(url);
+        }
 
         if (!htmlData.success) {
           throw new Error(htmlData.error || 'HTMLの取得に失敗しました');
@@ -154,6 +164,7 @@ class SEODiagnosticApp {
         parsed: parsedData,
         score: scoreResults,
         ai: aiResults,
+        rawHtml: htmlData.html || '',
         analyzedAt: new Date().toISOString()
       };
 
@@ -191,6 +202,9 @@ class SEODiagnosticApp {
 
     // 詳細データ
     this.displayDetailedData();
+
+    // HTMLソース
+    this.displayHTMLSource();
 
     // 結果セクションまでスクロール
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -434,6 +448,99 @@ class SEODiagnosticApp {
   }
 
   /**
+   * HTMLソースを表示
+   */
+  displayHTMLSource() {
+    // 元のHTMLを取得（結果から）
+    const rawHtml = this.currentResults.rawHtml || '';
+    const url = this.currentResults.parsed.url;
+
+    // HTMLソースを表示
+    const codeElement = document.querySelector('#html-source-content code');
+    if (codeElement) {
+      codeElement.textContent = rawHtml;
+
+      // Highlight.jsでシンタックスハイライト
+      if (typeof hljs !== 'undefined') {
+        hljs.highlightElement(codeElement);
+      }
+    }
+
+    // HTML長さ情報を表示
+    const lengthInfo = document.getElementById('html-length-info');
+    if (lengthInfo) {
+      const lines = rawHtml.split('\n').length;
+      lengthInfo.textContent = `${(rawHtml.length / 1024).toFixed(2)} KB / ${lines.toLocaleString()} 行`;
+    }
+
+    // コピーボタンのイベントリスナー
+    const copyBtn = document.getElementById('copy-html-btn');
+    if (copyBtn) {
+      copyBtn.onclick = () => this.copyHTMLToClipboard();
+    }
+
+    // ダウンロードボタンのイベントリスナー
+    const downloadBtn = document.getElementById('download-html-btn');
+    if (downloadBtn) {
+      downloadBtn.onclick = () => this.downloadHTML();
+    }
+  }
+
+  /**
+   * HTMLをクリップボードにコピー
+   */
+  async copyHTMLToClipboard() {
+    const rawHtml = this.currentResults.rawHtml || '';
+
+    try {
+      await navigator.clipboard.writeText(rawHtml);
+
+      const btn = document.getElementById('copy-html-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '✅ コピーしました！';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }, 2000);
+    } catch (error) {
+      console.error('Copy failed:', error);
+      alert('コピーに失敗しました');
+    }
+  }
+
+  /**
+   * HTMLをダウンロード
+   */
+  downloadHTML() {
+    const rawHtml = this.currentResults.rawHtml || '';
+    const url = this.currentResults.parsed.url;
+
+    // ファイル名を生成（URLから）
+    let filename = 'seo-diagnostic';
+    try {
+      const urlObj = new URL(url);
+      filename = urlObj.hostname.replace(/\./g, '_') + '_' + Date.now();
+    } catch (e) {
+      filename = 'seo-diagnostic_' + Date.now();
+    }
+
+    // Blobを作成
+    const blob = new Blob([rawHtml], { type: 'text/html' });
+    const url2 = URL.createObjectURL(blob);
+
+    // ダウンロードリンクを作成してクリック
+    const a = document.createElement('a');
+    a.href = url2;
+    a.download = filename + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url2);
+  }
+
+  /**
    * タブを切り替え
    */
   switchTab(tabName) {
@@ -527,6 +634,40 @@ class SEODiagnosticApp {
       },
       source: 'local-fallback'
     };
+  }
+
+  /**
+   * SPA対応のHTML取得（Puppeteer使用）
+   */
+  async fetchSPAHtml(url) {
+    try {
+      const response = await fetch('/api/fetch-spa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url: url,
+          waitTime: 3000, // JavaScriptの実行を待つ時間
+          waitUntil: 'networkidle0'
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'SPA HTMLの取得に失敗しました');
+      }
+
+      const result = await response.json();
+      return result;
+
+    } catch (error) {
+      console.error('SPA fetch error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   /**

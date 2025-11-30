@@ -1,0 +1,27 @@
+{
+  "name": "seo-diagnostic-app",
+  "version": "1.0.0",
+  "description": "Google公式ガイドラインに基づくSEO診断・スコアリング・AI改善提案ツール",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "puppeteer-core": "^21.6.1",
+    "@sparticuz/chromium": "^119.0.2"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  },
+  "keywords": [
+    "seo",
+    "diagnostic",
+    "google",
+    "analytics",
+    "web-performance"
+  ],
+  "author": "",
+  "license": "MIT"
+}
