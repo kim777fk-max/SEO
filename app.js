@@ -159,15 +159,21 @@ class SEODiagnosticApp {
       const scorer = new SEOScorer(parsedData, this.seoGuides);
       const scoreResults = scorer.score();
 
-      // AI分析（サーバーレス関数を呼び出し）
+      // SEOの基礎チェック（詳細チェック）
+      this.updateStatus('SEOの基礎チェックを実行中...');
+      const detailedChecker = new DetailedSEOChecker(parsedData, htmlData.html || '');
+      const detailedResults = detailedChecker.checkAll();
+
+      // AI分析（サーバーレス関数を呼び出し、詳細チェック結果も含める）
       this.updateStatus('AI改善提案を生成中...');
-      const aiResults = await this.generateAISuggestions(scoreResults, parsedData);
+      const aiResults = await this.generateAISuggestions(scoreResults, parsedData, detailedResults);
 
       // 結果を保存
       this.currentResults = {
         parsed: parsedData,
         score: scoreResults,
         ai: aiResults,
+        detailed: detailedResults,
         rawHtml: htmlData.html || '',
         analyzedAt: new Date().toISOString()
       };
@@ -203,6 +209,9 @@ class SEODiagnosticApp {
 
     // 問題点一覧
     this.displayIssues();
+
+    // SEOの基礎チェック結果
+    this.displaySEOBasics();
 
     // AI提案
     this.displayAISuggestions();
@@ -593,7 +602,7 @@ class SEODiagnosticApp {
   /**
    * AI改善提案を生成（サーバーレス関数を呼び出し）
    */
-  async generateAISuggestions(scoreResults, parsedData) {
+  async generateAISuggestions(scoreResults, parsedData, detailedResults) {
     try {
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
@@ -603,6 +612,7 @@ class SEODiagnosticApp {
         body: JSON.stringify({
           scoreResults,
           parsedData,
+          detailedResults, // 詳細チェック結果を含める
           apiType: 'openai' // サーバー側で環境変数から判断
         })
       });
@@ -799,6 +809,123 @@ class SEODiagnosticApp {
         statusEl.style.color = '';
       }, 3000);
     }
+  }
+
+  /**
+   * SEOの基礎チェック結果を表示
+   */
+  displaySEOBasics() {
+    const { detailed } = this.currentResults;
+    if (!detailed) return;
+
+    // サマリーの表示
+    this.displaySEOBasicsSummary(detailed.summary);
+
+    // 優先度別の結果を表示
+    this.displayPriorityChecks('s', detailed.priorityS);
+    this.displayPriorityChecks('a', detailed.priorityA);
+    this.displayPriorityChecks('b', detailed.priorityB);
+    this.displayPriorityChecks('c', detailed.priorityC);
+    this.displayPriorityChecks('d', detailed.priorityD);
+  }
+
+  /**
+   * サマリーの表示
+   */
+  displaySEOBasicsSummary(summary) {
+    const container = document.getElementById('seo-basics-summary');
+    if (!container) return;
+
+    const passRate = summary.total > 0 ? (summary.passed / summary.total * 100).toFixed(1) : 0;
+
+    container.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: bold; color: #1976d2;">${summary.total}</div>
+          <div style="color: #666; font-size: 0.9rem;">総チェック項目</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: bold; color: #4CAF50;">${summary.passed}</div>
+          <div style="color: #666; font-size: 0.9rem;">合格</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: bold; color: #d32f2f;">${summary.failed}</div>
+          <div style="color: #666; font-size: 0.9rem;">不合格</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: bold; color: #f57c00;">${summary.warnings}</div>
+          <div style="color: #666; font-size: 0.9rem;">警告</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 2rem; font-weight: bold; color: ${passRate >= 80 ? '#4CAF50' : passRate >= 60 ? '#f57c00' : '#d32f2f'}">${passRate}%</div>
+          <div style="color: #666; font-size: 0.9rem;">合格率</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * 優先度別のチェック結果を表示
+   */
+  displayPriorityChecks(priority, checks) {
+    const container = document.getElementById(`seo-basics-priority-${priority}`);
+    if (!container || !checks || checks.length === 0) return;
+
+    const statusIcons = {
+      'pass': '✅',
+      'fail': '❌',
+      'warning': '⚠️',
+      'info': 'ℹ️'
+    };
+
+    const statusColors = {
+      'pass': '#4CAF50',
+      'fail': '#d32f2f',
+      'warning': '#f57c00',
+      'info': '#1976d2'
+    };
+
+    const statusLabels = {
+      'pass': '合格',
+      'fail': '不合格',
+      'warning': '警告',
+      'info': '情報'
+    };
+
+    let html = '';
+
+    checks.forEach((check, index) => {
+      const icon = statusIcons[check.status] || '•';
+      const color = statusColors[check.status] || '#666';
+      const label = statusLabels[check.status] || check.status;
+
+      html += `
+        <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; background: white;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <h5 style="margin: 0; font-size: 1rem; color: #333;">
+              ${icon} ${check.title}
+            </h5>
+            <span style="padding: 0.25rem 0.75rem; background: ${color}; color: white; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+              ${label}
+            </span>
+          </div>
+          <p style="margin: 0.5rem 0; color: #666; font-size: 0.95rem;">
+            ${check.message}
+          </p>
+          <details style="margin-top: 0.75rem;">
+            <summary style="cursor: pointer; color: #1976d2; font-size: 0.9rem; font-weight: 500;">
+              詳細を表示
+            </summary>
+            <div style="margin-top: 0.5rem; padding: 0.75rem; background: #f5f5f5; border-radius: 4px; font-size: 0.9rem; color: #555;">
+              <p style="margin: 0 0 0.5rem 0;"><strong>推奨事項:</strong> ${check.details}</p>
+              <p style="margin: 0; font-size: 0.85rem; color: #888;"><strong>参照:</strong> ${check.source}</p>
+            </div>
+          </details>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
   }
 
   /**

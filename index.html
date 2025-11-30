@@ -139,6 +139,7 @@
       <div class="tabs">
         <button class="tab-btn active" data-tab="overview">概要</button>
         <button class="tab-btn" data-tab="issues">問題点</button>
+        <button class="tab-btn" data-tab="basics">SEOの基礎</button>
         <button class="tab-btn" data-tab="suggestions">AI提案</button>
         <button class="tab-btn" data-tab="details">詳細データ</button>
         <button class="tab-btn" data-tab="html-source">HTMLソース</button>
@@ -157,6 +158,84 @@
         <h3>検出された問題点</h3>
         <div id="issues-list">
           <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: SEOの基礎 -->
+      <div id="basics-tab" class="tab-content">
+        <h3>SEOの基礎チェック（Google検索セントラル準拠）</h3>
+        <p style="color: #666; margin-bottom: 1.5rem;">
+          優先度別に、Google検索セントラルのガイドラインに基づいた詳細なSEOチェックを実施します。
+        </p>
+
+        <!-- サマリー -->
+        <div id="seo-basics-summary" style="margin-bottom: 2rem;">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+
+        <!-- 優先度S -->
+        <div class="seo-basics-section">
+          <h4 style="color: #d32f2f; border-left: 4px solid #d32f2f; padding-left: 0.8rem; margin-bottom: 1rem;">
+            🔴 優先度S: 必須要件とスパム回避
+          </h4>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            検索結果に表示されるための最低限の要件。違反すると検索結果から除外される可能性があります。
+          </p>
+          <div id="seo-basics-priority-s">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+
+        <!-- 優先度A -->
+        <div class="seo-basics-section">
+          <h4 style="color: #f57c00; border-left: 4px solid #f57c00; padding-left: 0.8rem; margin-bottom: 1rem;">
+            🟠 優先度A: ユーザー満足度とコンテンツ品質
+          </h4>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            掲載順位に最も影響が大きい対策。有用で信頼性の高いコンテンツの提供が重要です。
+          </p>
+          <div id="seo-basics-priority-a">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+
+        <!-- 優先度B -->
+        <div class="seo-basics-section">
+          <h4 style="color: #fbc02d; border-left: 4px solid #fbc02d; padding-left: 0.8rem; margin-bottom: 1rem;">
+            🟡 優先度B: 技術的最適化
+          </h4>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            クロールとインデックス登録のための技術的基盤を整備します。
+          </p>
+          <div id="seo-basics-priority-b">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+
+        <!-- 優先度C -->
+        <div class="seo-basics-section">
+          <h4 style="color: #388e3c; border-left: 4px solid #388e3c; padding-left: 0.8rem; margin-bottom: 1rem;">
+            🟢 優先度C: 検索結果での見え方
+          </h4>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            検索結果ページでのクリック率を高めるための施策です。
+          </p>
+          <div id="seo-basics-priority-c">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+
+        <!-- 優先度D -->
+        <div class="seo-basics-section">
+          <h4 style="color: #1976d2; border-left: 4px solid #1976d2; padding-left: 0.8rem; margin-bottom: 1rem;">
+            🔵 優先度D: 長期的な管理
+          </h4>
+          <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            サイトの成長と長期的なメンテナンスのための活動です。
+          </p>
+          <div id="seo-basics-priority-d">
+            <!-- JavaScriptで動的生成 -->
+          </div>
         </div>
       </div>
 
@@ -210,6 +289,7 @@
   <script src="./modules/parser.js"></script>
   <script src="./modules/scorer.js"></script>
   <script src="./modules/domain_power.js"></script>
+  <script src="./modules/detailed_seo_checker.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

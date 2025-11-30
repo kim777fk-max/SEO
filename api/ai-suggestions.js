@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { scoreResults, parsedData, apiType } = req.body;
+    const { scoreResults, parsedData, detailedResults, apiType } = req.body;
 
     if (!scoreResults || !parsedData) {
       return res.status(400).json({ error: 'Missing required parameters' });
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     if (process.env.OPENAI_API_KEY && (!apiType || apiType === 'openai')) {
       console.log('Trying OpenAI API...');
       try {
-        result = await callOpenAIAPI(process.env.OPENAI_API_KEY, scoreResults, parsedData);
+        result = await callOpenAIAPI(process.env.OPENAI_API_KEY, scoreResults, parsedData, detailedResults);
         usedProvider = 'openai';
         console.log('✅ OpenAI API succeeded');
       } catch (error) {
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
     if (!result && process.env.ANTHROPIC_API_KEY && (!apiType || apiType === 'claude')) {
       console.log('Trying Claude API...');
       try {
-        result = await callClaudeAPI(process.env.ANTHROPIC_API_KEY, scoreResults, parsedData);
+        result = await callClaudeAPI(process.env.ANTHROPIC_API_KEY, scoreResults, parsedData, detailedResults);
         usedProvider = 'claude';
         console.log('✅ Claude API succeeded');
       } catch (error) {
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     if (!result && process.env.GEMINI_API_KEY && (!apiType || apiType === 'gemini')) {
       console.log('Trying Gemini API...');
       try {
-        result = await callGeminiAPI(process.env.GEMINI_API_KEY, scoreResults, parsedData);
+        result = await callGeminiAPI(process.env.GEMINI_API_KEY, scoreResults, parsedData, detailedResults);
         usedProvider = 'gemini';
         console.log('✅ Gemini API succeeded');
       } catch (error) {
@@ -118,8 +118,8 @@ export default async function handler(req, res) {
 /**
  * OpenAI APIを呼び出し
  */
-async function callOpenAIAPI(apiKey, scoreResults, parsedData) {
-  const prompt = buildPrompt(scoreResults, parsedData);
+async function callOpenAIAPI(apiKey, scoreResults, parsedData, detailedResults) {
+  const prompt = buildPrompt(scoreResults, parsedData, detailedResults);
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -175,8 +175,8 @@ async function callOpenAIAPI(apiKey, scoreResults, parsedData) {
 /**
  * Claude APIを呼び出し
  */
-async function callClaudeAPI(apiKey, scoreResults, parsedData) {
-  const prompt = buildPrompt(scoreResults, parsedData);
+async function callClaudeAPI(apiKey, scoreResults, parsedData, detailedResults) {
+  const prompt = buildPrompt(scoreResults, parsedData, detailedResults);
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -228,8 +228,8 @@ async function callClaudeAPI(apiKey, scoreResults, parsedData) {
 /**
  * Google Gemini APIを呼び出し
  */
-async function callGeminiAPI(apiKey, scoreResults, parsedData) {
-  const prompt = buildPrompt(scoreResults, parsedData);
+async function callGeminiAPI(apiKey, scoreResults, parsedData, detailedResults) {
+  const prompt = buildPrompt(scoreResults, parsedData, detailedResults);
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
     method: 'POST',
@@ -284,7 +284,7 @@ async function callGeminiAPI(apiKey, scoreResults, parsedData) {
 /**
  * プロンプトを構築
  */
-function buildPrompt(scoreResults, parsedData) {
+function buildPrompt(scoreResults, parsedData, detailedResults) {
   const issues = scoreResults.issues.map(issue => ({
     category: issue.category,
     problem: issue.rule,
@@ -304,7 +304,28 @@ function buildPrompt(scoreResults, parsedData) {
     externalLinks: parsedData.links.totalExternal
   };
 
-  return `あなたはSEOの専門家です。以下のWebページのSEO診断結果に基づいて、具体的な改善提案を日本語で提供してください。
+  // 詳細チェックの重要な問題を抽出
+  let detailedIssuesText = '';
+  if (detailedResults) {
+    const allChecks = [
+      ...(detailedResults.priorityS || []),
+      ...(detailedResults.priorityA || []),
+      ...(detailedResults.priorityB || []),
+      ...(detailedResults.priorityC || []),
+      ...(detailedResults.priorityD || [])
+    ];
+
+    const failedChecks = allChecks.filter(c => c.status === 'fail' || c.status === 'warning');
+
+    if (failedChecks.length > 0) {
+      detailedIssuesText = `\n【SEOの基礎チェック結果（Google検索セントラル準拠）】\n`;
+      failedChecks.forEach((check, i) => {
+        detailedIssuesText += `${i + 1}. [優先度${check.priority}] ${check.title}: ${check.message}\n   推奨: ${check.details}\n`;
+      });
+    }
+  }
+
+  return `あなたはGoogle検索セントラルのガイドラインに精通したSEO専門家です。以下のWebページのSEO診断結果に基づいて、具体的な改善提案を日本語で提供してください。
 
 【診断結果サマリー】
 - URL: ${summary.url}
@@ -316,14 +337,15 @@ function buildPrompt(scoreResults, parsedData) {
 - 内部リンク: ${summary.internalLinks}
 - 外部リンク: ${summary.externalLinks}
 
-【検出された問題点】
-${issues.map((issue, i) => `${i + 1}. [${issue.severity}] ${issue.problem}: ${issue.description}`).join('\n')}
+【基本チェックで検出された問題点】
+${issues.map((issue, i) => `${i + 1}. [${issue.severity}] ${issue.problem}: ${issue.description}`).join('\n')}${detailedIssuesText}
 
 【依頼内容】
-1. 最も重要な問題点TOP3を優先順位付けして説明してください
+1. 最も重要な問題点TOP3を優先順位付けして説明してください（Google検索セントラルのガイドラインに基づく）
 2. 各問題に対する具体的な改善方法を提案してください
 3. 実装が簡単な順に並べてください
-4. 可能であれば、改善後の期待効果も記載してください
+4. 改善後の期待効果を記載してください
+5. 優先度S（必須要件）やA（ユーザー満足度）の問題を特に重視してください
 
 回答は以下のJSON形式で返してください：
 {
@@ -337,7 +359,7 @@ ${issues.map((issue, i) => `${i + 1}. [${issue.severity}] ${issue.problem}: ${is
       "expectedImpact": "期待される効果"
     }
   ],
-  "generalAdvice": "全体的なアドバイス"
+  "generalAdvice": "全体的なアドバイス（Google検索セントラルのベストプラクティスに基づく）"
 }`;
 }
 
