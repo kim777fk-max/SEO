@@ -144,20 +144,24 @@ class DetailedSEOChecker {
       issues.push('隠しテキストまたは隠しリンクの可能性');
     }
 
-    // キーワードの過度な繰り返し
-    const text = this.data.content.textContent.toLowerCase();
-    const words = text.split(/\s+/);
-    const wordCount = {};
-    words.forEach(word => {
-      if (word.length > 3) {
-        wordCount[word] = (wordCount[word] || 0) + 1;
-      }
-    });
+    // キーワードの過度な繰り返し（テキストが存在する場合のみ）
+    if (this.data.content && this.data.content.text) {
+      const text = this.data.content.text.toLowerCase();
+      const words = text.split(/\s+/).filter(word => word.length > 0);
+      const wordCount = {};
+      words.forEach(word => {
+        if (word.length > 3) {
+          wordCount[word] = (wordCount[word] || 0) + 1;
+        }
+      });
 
-    const maxRepeat = Math.max(...Object.values(wordCount));
-    const totalWords = words.length;
-    if (maxRepeat > totalWords * 0.05 && totalWords > 100) {
-      issues.push('特定キーワードの過度な繰り返し（キーワードスタッフィングの可能性）');
+      if (Object.keys(wordCount).length > 0) {
+        const maxRepeat = Math.max(...Object.values(wordCount));
+        const totalWords = words.length;
+        if (maxRepeat > totalWords * 0.05 && totalWords > 100) {
+          issues.push('特定キーワードの過度な繰り返し（キーワードスタッフィングの可能性）');
+        }
+      }
     }
 
     return {
@@ -175,11 +179,11 @@ class DetailedSEOChecker {
 
   checkRobotsTxt() {
     // robots metaタグのチェック
-    const robotsMeta = this.data.meta.robots;
+    const robotsMeta = this.data.meta && this.data.meta.robots ? this.data.meta.robots : null;
     const isBlocked = robotsMeta && (
-      robotsMeta.includes('noindex') ||
-      robotsMeta.includes('nofollow') ||
-      robotsMeta.includes('none')
+      robotsMeta.toLowerCase().includes('noindex') ||
+      robotsMeta.toLowerCase().includes('nofollow') ||
+      robotsMeta.toLowerCase().includes('none')
     );
 
     return {
@@ -209,8 +213,8 @@ class DetailedSEOChecker {
   }
 
   checkNoIndex() {
-    const hasNoIndex = this.data.meta.robots && this.data.meta.robots.includes('noindex');
-    const hasIndexNofollow = this.data.meta.robots && this.data.meta.robots.includes('noindex, nofollow');
+    const robotsMeta = this.data.meta && this.data.meta.robots ? this.data.meta.robots : null;
+    const hasNoIndex = robotsMeta && robotsMeta.toLowerCase().includes('noindex');
 
     return {
       id: 'no-index',
@@ -271,9 +275,12 @@ class DetailedSEOChecker {
   // ==================== 優先度A チェック関数 ====================
 
   checkContentQuality() {
-    const wordCount = this.data.content.wordCount;
+    const wordCount = this.data.content && this.data.content.wordCount ? this.data.content.wordCount : 0;
     const hasUniqueContent = wordCount >= 300;
-    const headingsCount = this.data.headings.h1.length + this.data.headings.h2.length + this.data.headings.h3.length;
+    const h1Count = this.data.headings && this.data.headings.h1 ? this.data.headings.h1.length : 0;
+    const h2Count = this.data.headings && this.data.headings.h2 ? this.data.headings.h2.length : 0;
+    const h3Count = this.data.headings && this.data.headings.h3 ? this.data.headings.h3.length : 0;
+    const headingsCount = h1Count + h2Count + h3Count;
 
     let status = 'pass';
     let message = '';
@@ -303,7 +310,8 @@ class DetailedSEOChecker {
   checkEEAT() {
     const hasAuthor = this.html.match(/author/i) || this.html.match(/著者/i);
     const hasPublishDate = this.html.match(/datePublished/i) || this.html.match(/published/i);
-    const hasSource = this.data.links.totalExternal > 0;
+    const totalExternal = this.data.links && this.data.links.totalExternal ? this.data.links.totalExternal : 0;
+    const hasSource = totalExternal > 0;
 
     let score = 0;
     if (hasAuthor) score++;
@@ -336,7 +344,9 @@ class DetailedSEOChecker {
   }
 
   checkReadability() {
-    const hasHeadings = this.data.headings.h2.length > 0 || this.data.headings.h3.length > 0;
+    const h2Count = this.data.headings && this.data.headings.h2 ? this.data.headings.h2.length : 0;
+    const h3Count = this.data.headings && this.data.headings.h3 ? this.data.headings.h3.length : 0;
+    const hasHeadings = h2Count > 0 || h3Count > 0;
     const hasParagraphs = this.html.match(/<p/gi)?.length || 0;
     const hasLists = this.html.match(/<ul|<ol/gi)?.length || 0;
 
@@ -371,7 +381,8 @@ class DetailedSEOChecker {
   }
 
   checkHTTPS() {
-    const isHTTPS = this.data.url.startsWith('https://');
+    const url = this.data.url || '';
+    const isHTTPS = url.toLowerCase().startsWith('https://');
 
     return {
       id: 'https',
@@ -387,7 +398,7 @@ class DetailedSEOChecker {
   }
 
   checkMobileOptimization() {
-    const hasViewport = this.data.meta.viewport !== null;
+    const hasViewport = this.data.meta && this.data.meta.viewport !== null && this.data.meta.viewport !== undefined;
     const hasResponsiveImages = this.html.match(/srcset|sizes/i);
 
     let status = 'pass';
@@ -478,7 +489,9 @@ class DetailedSEOChecker {
   }
 
   checkCrawlableLinks() {
-    const totalLinks = this.data.links.totalInternal + this.data.links.totalExternal;
+    const totalInternal = this.data.links && this.data.links.totalInternal ? this.data.links.totalInternal : 0;
+    const totalExternal = this.data.links && this.data.links.totalExternal ? this.data.links.totalExternal : 0;
+    const totalLinks = totalInternal + totalExternal;
     const hasLinks = totalLinks > 0;
 
     return {
@@ -495,7 +508,7 @@ class DetailedSEOChecker {
   }
 
   checkCanonical() {
-    const hasCanonical = this.data.meta.canonical !== null;
+    const hasCanonical = this.data.meta && this.data.meta.canonical !== null && this.data.meta.canonical !== undefined;
 
     return {
       id: 'canonical',
@@ -528,11 +541,11 @@ class DetailedSEOChecker {
   // ==================== 優先度C チェック関数 ====================
 
   checkTitleOptimization() {
-    const title = this.data.title.text;
-    const titleLength = this.data.title.length;
+    const title = this.data.title && this.data.title.text ? this.data.title.text : '';
+    const titleLength = this.data.title && this.data.title.length ? this.data.title.length : 0;
     const hasTitle = title && title.length > 0;
     const isOptimalLength = titleLength >= 30 && titleLength <= 60;
-    const hasUnique = !title.match(/^(ホーム|Home|トップページ)$/i);
+    const hasUnique = title && !title.match(/^(ホーム|Home|トップページ)$/i);
 
     let status = 'pass';
     let message = '';
@@ -563,7 +576,7 @@ class DetailedSEOChecker {
   }
 
   checkMetaDescription() {
-    const description = this.data.meta.description;
+    const description = this.data.meta && this.data.meta.description ? this.data.meta.description : '';
     const descLength = description ? description.length : 0;
     const hasDescription = description && description.length > 0;
     const isOptimalLength = descLength >= 120 && descLength <= 160;
@@ -594,9 +607,8 @@ class DetailedSEOChecker {
   }
 
   checkImageAlt() {
-    const totalImages = this.data.images.total;
-    const imagesWithAlt = this.data.images.withAlt;
-    const imagesWithoutAlt = this.data.images.withoutAlt;
+    const totalImages = this.data.images && this.data.images.total ? this.data.images.total : 0;
+    const imagesWithAlt = this.data.images && this.data.images.withAlt ? this.data.images.withAlt : 0;
     const altCoverage = totalImages > 0 ? (imagesWithAlt / totalImages * 100).toFixed(1) : 0;
 
     let status = 'pass';
@@ -657,7 +669,7 @@ class DetailedSEOChecker {
   }
 
   checkMediaPlacement() {
-    const hasImages = this.data.images.total > 0;
+    const hasImages = this.data.images && this.data.images.total ? this.data.images.total > 0 : false;
     const hasVideos = this.html.match(/<video|<iframe[^>]*youtube|<iframe[^>]*vimeo/gi);
 
     return {
@@ -693,7 +705,7 @@ class DetailedSEOChecker {
   }
 
   checkExternalLinksNofollow() {
-    const externalLinks = this.data.links.totalExternal;
+    const externalLinks = this.data.links && this.data.links.totalExternal ? this.data.links.totalExternal : 0;
 
     return {
       id: 'external-links-nofollow',
