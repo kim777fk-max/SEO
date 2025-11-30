@@ -2,10 +2,13 @@
  * Vercel Serverless Function
  * AI改善提案APIエンドポイント
  *
- * 環境変数:
- * - OPENAI_API_KEY: OpenAI APIキー
- * - CLAUDE_API_KEY: Claude APIキー
- * - GEMINI_API_KEY: Google Gemini APIキー
+ * 環境変数（いずれか1つ以上を設定）:
+ * - OPENAI_API_KEY: OpenAI APIキー（優先順位1）
+ * - ANTHROPIC_API_KEY: Claude APIキー（優先順位2）
+ * - GEMINI_API_KEY: Google Gemini APIキー（優先順位3）
+ *
+ * 利用可能なAPIを自動検出して使用します。
+ * すべてのAPIが利用不可の場合、ルールベース分析にフォールバックします。
  */
 
 export default async function handler(req, res) {
@@ -30,36 +33,51 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { scoreResults, parsedData, apiType = 'openai' } = req.body;
+    const { scoreResults, parsedData, apiType } = req.body;
 
     if (!scoreResults || !parsedData) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
-    // APIタイプに応じてキーを取得
-    let apiKey;
-    if (apiType === 'claude') {
-      apiKey = process.env.CLAUDE_API_KEY;
-    } else if (apiType === 'gemini') {
-      apiKey = process.env.GEMINI_API_KEY;
-    } else {
-      apiKey = process.env.OPENAI_API_KEY;
+    // 利用可能なAPIプロバイダーを自動選択（優先順位: OpenAI → Claude → Gemini）
+    let result = null;
+    let usedProvider = null;
+
+    // 優先順位1: OpenAI
+    if (process.env.OPENAI_API_KEY && (!apiType || apiType === 'openai')) {
+      try {
+        result = await callOpenAIAPI(process.env.OPENAI_API_KEY, scoreResults, parsedData);
+        usedProvider = 'openai';
+      } catch (error) {
+        console.warn('OpenAI API failed:', error.message);
+      }
     }
 
-    if (!apiKey) {
-      // APIキーが設定されていない場合はルールベース分析にフォールバック
+    // 優先順位2: Claude (Anthropic)
+    if (!result && process.env.ANTHROPIC_API_KEY && (!apiType || apiType === 'claude')) {
+      try {
+        result = await callClaudeAPI(process.env.ANTHROPIC_API_KEY, scoreResults, parsedData);
+        usedProvider = 'claude';
+      } catch (error) {
+        console.warn('Claude API failed:', error.message);
+      }
+    }
+
+    // 優先順位3: Gemini
+    if (!result && process.env.GEMINI_API_KEY && (!apiType || apiType === 'gemini')) {
+      try {
+        result = await callGeminiAPI(process.env.GEMINI_API_KEY, scoreResults, parsedData);
+        usedProvider = 'gemini';
+      } catch (error) {
+        console.warn('Gemini API failed:', error.message);
+      }
+    }
+
+    // すべてのAI APIが失敗した場合、ルールベース分析にフォールバック
+    if (!result) {
+      console.log('All AI APIs unavailable, using rule-based suggestions');
       const ruleBasedResult = generateRuleBasedSuggestions(scoreResults, parsedData);
       return res.status(200).json(ruleBasedResult);
-    }
-
-    // AI分析を実行
-    let result;
-    if (apiType === 'claude') {
-      result = await callClaudeAPI(apiKey, scoreResults, parsedData);
-    } else if (apiType === 'gemini') {
-      result = await callGeminiAPI(apiKey, scoreResults, parsedData);
-    } else {
-      result = await callOpenAIAPI(apiKey, scoreResults, parsedData);
     }
 
     return res.status(200).json(result);

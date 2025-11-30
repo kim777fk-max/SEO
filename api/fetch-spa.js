@@ -118,9 +118,22 @@ async function renderWithBrowserless(url) {
     body: JSON.stringify({
       url: url,
       gotoOptions: {
-        waitUntil: 'networkidle2',
-        timeout: 60000
-      }
+        waitUntil: ['load', 'networkidle2'],  // 複数条件: ページ読み込み完了 + ネットワーク安定
+        timeout: 90000  // タイムアウト延長: 90秒
+      },
+      waitFor: 5000,  // JavaScript実行を確実に待つ: 5秒
+      // ページ全体が完全にレンダリングされるまで待機
+      addScriptTag: [{
+        content: `
+          new Promise((resolve) => {
+            if (document.readyState === 'complete') {
+              setTimeout(resolve, 2000);
+            } else {
+              window.addEventListener('load', () => setTimeout(resolve, 2000));
+            }
+          });
+        `
+      }]
     })
   });
 
