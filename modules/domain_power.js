@@ -1,4 +1,9 @@
-export function estimateDomainPower(hostname) {
+/**
+ * ドメインパワー推定モジュール
+ * ドメインの権威性をヒューリスティックに判定
+ */
+
+function estimateDomainPower(hostname) {
   const host = (hostname || '').toLowerCase();
 
   let score = 0;
@@ -37,6 +42,15 @@ export function estimateDomainPower(hostname) {
     reason.push('テスト・開発環境と思われるサブドメイン');
   }
 
+  // 4) 政府系サブドメイン判定を強化
+  if (host.includes('.mhlw.go.jp') || host.includes('.cao.go.jp') || host.includes('.mext.go.jp')) {
+    // 既に .go.jp で90点になっているので、追加のボーナスは不要
+    // ただし、理由を明確化
+    if (!reason.includes('政府系ドメイン（.go.jp / .gov）')) {
+      reason.push('日本政府の省庁ドメイン');
+    }
+  }
+
   // 0〜100 にクリップ
   if (score < 0) score = 0;
   if (score > 100) score = 100;
@@ -48,4 +62,14 @@ export function estimateDomainPower(hostname) {
   else if (score >= 40) label = '普通';
 
   return { score, label, reason };
+}
+
+// グローバルスコープに公開（ブラウザ環境）
+if (typeof window !== 'undefined') {
+  window.estimateDomainPower = estimateDomainPower;
+}
+
+// CommonJS形式でもエクスポート（Node.js環境）
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { estimateDomainPower };
 }
