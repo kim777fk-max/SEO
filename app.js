@@ -191,6 +191,9 @@ class SEODiagnosticApp {
     // スコア表示
     this.displayScore();
 
+    // ドメインパワー表示
+    this.displayDomainPower();
+
     // カテゴリ別結果
     this.displayCategoryResults();
 
@@ -243,6 +246,32 @@ class SEODiagnosticApp {
     document.getElementById('total-issues').textContent = score.issues.length;
     document.getElementById('critical-issues').textContent =
       score.issues.filter(i => i.severity === 'critical').length;
+  }
+
+  /**
+   * ドメインパワーを表示
+   */
+  displayDomainPower() {
+    try {
+      const url = this.currentResults.parsed.url;
+      const hostname = new URL(url).hostname;
+      const domainPower = estimateDomainPower(hostname);
+
+      document.getElementById('domain-score').textContent = `${domainPower.score}/100`;
+      document.getElementById('domain-label').textContent = domainPower.label;
+
+      const reasonsList = document.getElementById('domain-reasons');
+      reasonsList.innerHTML = '';
+      domainPower.reason.forEach(reason => {
+        const li = document.createElement('li');
+        li.textContent = reason;
+        reasonsList.appendChild(li);
+      });
+    } catch (error) {
+      console.error('ドメインパワー計算エラー:', error);
+      document.getElementById('domain-score').textContent = '-';
+      document.getElementById('domain-label').textContent = '計算失敗';
+    }
   }
 
   /**
