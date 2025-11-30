@@ -1,27 +1,15 @@
 {
-  "name": "seo-diagnostic-app",
+  "name": "seo-audit-app",
   "version": "1.0.0",
-  "description": "Google公式ガイドラインに基づくSEO診断・スコアリング・AI改善提案ツール",
+  "description": "SEO diagnostic web app following Google guidelines",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step required for static site'",
-    "deploy": "vercel --prod"
+    "lint": "echo 'no lint configured'",
+    "test": "echo 'no tests'"
   },
   "dependencies": {
-    "puppeteer-core": "^21.6.1",
-    "@sparticuz/chromium": "^119.0.2"
-  },
-  "devDependencies": {
-    "vercel": "^33.0.0"
-  },
-  "keywords": [
-    "seo",
-    "diagnostic",
-    "google",
-    "analytics",
-    "web-performance"
-  ],
-  "author": "",
-  "license": "MIT"
+    "@sparticuz/chromium-min": "^141.0.0",
+    "highlight.js": "^11.9.0",
+    "puppeteer-core": "^24.23.1"
+  }
 }
