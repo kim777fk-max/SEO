@@ -6,7 +6,7 @@
     },
     "api/ai-suggestions.js": {
       "memory": 1024,
-      "maxDuration": 20
+      "maxDuration": 60
     }
   }
 }

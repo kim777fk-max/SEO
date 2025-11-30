@@ -119,10 +119,11 @@ async function renderWithBrowserless(url) {
     body: JSON.stringify({
       url: url,
       gotoOptions: {
-        waitUntil: 'networkidle0',  // ネットワークが完全に安定するまで待機
+        waitUntil: 'networkidle0',  // ネットワークが完全に安定するまで待機（500ms間リクエスト0件）
         timeout: 90000  // タイムアウト: 90秒
-      },
-      waitFor: 8000  // JavaScript実行完了を待つ: 8秒（DOMレンダリング + 動的コンテンツ生成）
+      }
+      // 注: waitForパラメータは/content APIではサポートされていないため削除
+      // networkidle0で十分な待機時間が確保されます
     })
   });
 
