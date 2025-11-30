@@ -1,5 +1,4 @@
-import chromium from "@sparticuz/chromium-min";
-import puppeteer from "puppeteer-core";
+import { chromium } from 'playwright-core';
 
 export default async function handler(request, response) {
   const { url, spa } = request.query;
@@ -17,7 +16,7 @@ export default async function handler(request, response) {
     if (useSpa) {
       // SPAモードを試行
       try {
-        const html = await renderSpa(url);
+        const html = await renderSpaWithPlaywright(url);
         return response.status(200).json({ success: true, html });
       } catch (spaError) {
         console.error("SPA rendering failed, falling back to simple fetch:", spaError);
@@ -62,47 +61,45 @@ async function simpleFetch(url) {
 }
 
 /**
- * SPAレンダリング（Puppeteer + Chromium）
+ * SPAレンダリング（Playwright + Chromium）
+ * Playwrightはサーバーレス環境での動作が最適化されている
  */
-async function renderSpa(url) {
-  console.log("Starting SPA rendering for:", url);
+async function renderSpaWithPlaywright(url) {
+  console.log("Starting Playwright SPA rendering for:", url);
 
-  // chromium 設定
-  chromium.setGraphicsMode(false);
-  chromium.setHeadlessMode(true);
-
-  const executablePath = await chromium.executablePath(
-    "https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.tar",
-  );
-
-  console.log("Chromium executable path:", executablePath);
-
-  if (!executablePath) {
-    throw new Error("Chromium executable path not resolved.");
-  }
-
-  const browser = await puppeteer.launch({
+  const browser = await chromium.launch({
+    headless: true,
     args: [
-      ...chromium.args,
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
+      '--disable-blink-features=AutomationControlled',
       '--disable-gpu',
-      '--single-process'
-    ],
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
+      '--single-process',
+      '--no-zygote'
+    ]
   });
 
   console.log("Browser launched successfully");
 
   try {
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 60000 });
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    });
+
+    const page = await context.newPage();
+
+    await page.goto(url, {
+      waitUntil: 'networkidle',
+      timeout: 60000
+    });
+
+    // JavaScriptの実行を待つ
+    await page.waitForTimeout(2000);
+
     const content = await page.content();
     console.log("Page content retrieved, length:", content.length);
+
     return content;
   } finally {
     await browser.close();

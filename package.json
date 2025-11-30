@@ -8,8 +8,8 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "@sparticuz/chromium-min": "^141.0.0",
-    "highlight.js": "^11.9.0",
-    "puppeteer-core": "^24.23.1"
+    "playwright-core": "^1.40.0",
+    "playwright-chromium": "^1.40.0",
+    "highlight.js": "^11.9.0"
   }
 }
