@@ -99,21 +99,13 @@ GitHub Pagesで公開されているので、すぐに使えます：
    - AI改善提案
    - 詳細データ
 
-### AI機能の設定（オプション）
+### AI機能について
 
-より詳細な改善提案を得るには、以下のいずれかのAPIキーを設定してください：
+AI改善提案機能は、セキュリティを考慮してサーバーサイドで動作します。
 
-#### OpenAI APIの場合
-1. [OpenAI Platform](https://platform.openai.com/)でAPIキーを取得
-2. アプリの「AI設定」セクションで「OpenAI (GPT-4)」を選択
-3. APIキーを入力して保存
-
-#### Claude APIの場合
-1. [Anthropic Console](https://console.anthropic.com/)でAPIキーを取得
-2. アプリの「AI設定」セクションで「Claude (Anthropic)」を選択
-3. APIキーを入力して保存
-
-**注意**: APIキーはブラウザのLocalStorageに保存されます。
+- **APIキーは環境変数として安全に管理**
+- フロントエンドに一切露出しません
+- APIキーが設定されていない場合は、ルールベース分析が使用されます
 
 ## Google SEOガイドラインの準拠
 
@@ -128,46 +120,77 @@ GitHub Pagesで公開されているので、すぐに使えます：
 ## 技術スタック
 
 - **フロントエンド**: Vanilla JavaScript (ES6+)
+- **バックエンド**: Vercel Serverless Functions
 - **スタイル**: CSS3 (CSS Variables, Flexbox, Grid)
 - **HTML解析**: DOMParser API
-- **AI統合**: OpenAI API / Claude API
-- **データストレージ**: LocalStorage
+- **AI統合**: OpenAI API / Claude API (サーバーサイド)
+- **セキュリティ**: 環境変数によるAPIキー管理
 
 ## 特徴
 
-- ✅ 完全ローカル動作（API部分を除く）
+- ✅ **セキュアなAPI管理**: APIキーは環境変数で保護、フロントエンドに露出しない
+- ✅ **サーバーレスアーキテクチャ**: Vercel Functionsで効率的に動作
 - ✅ レスポンシブデザイン（モバイル/タブレット/デスクトップ対応）
 - ✅ CORS制限に対応（複数のプロキシフォールバック）
-- ✅ API未設定でも基本機能が利用可能
+- ✅ API未設定でもルールベース分析で動作
 - ✅ モダンでクリーンなUI/UX
 - ✅ アクセシビリティ対応
 - ✅ 印刷対応
 
 ## デプロイ
 
-### GitHub Pagesでの公開
+### Vercelでのデプロイ（推奨）
 
-このリポジトリはGitHub Actionsで自動デプロイされます。
+AI機能を含む完全な機能を利用するには、Vercelにデプロイすることを推奨します。
 
-#### 初回設定
+#### ワンクリックデプロイ
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kim777fk-max/SEO)
+
+#### 手動デプロイ
+
+1. **Vercelアカウントを作成**
+   - https://vercel.com にアクセスしてサインアップ
+
+2. **リポジトリをインポート**
+   - Vercel ダッシュボードで「New Project」をクリック
+   - GitHubリポジトリをインポート
+
+3. **環境変数を設定**
+   - Project Settings > Environment Variables に移動
+   - 以下の環境変数を追加（オプション）:
+     - `OPENAI_API_KEY`: OpenAI APIキー
+     - `CLAUDE_API_KEY`: Claude APIキー
+   - 少なくとも1つのAPIキーを設定することを推奨
+
+4. **デプロイ**
+   - 「Deploy」ボタンをクリック
+   - デプロイ完了後、URLが発行されます
+
+#### ローカルでVercelをテスト
+
+```bash
+# Vercel CLIをインストール
+npm i -g vercel
+
+# ローカルで開発サーバーを起動
+vercel dev
+
+# .env.localファイルに環境変数を設定
+OPENAI_API_KEY=your-key-here
+```
+
+### GitHub Pagesでの公開（静的サイトのみ）
+
+**注意**: GitHub Pagesではサーバーレス関数が動作しないため、AI機能は利用できません。
 
 1. **GitHub Pagesを有効化**
-   - GitHubリポジトリページにアクセス
    - `Settings` > `Pages` に移動
    - `Source` を `GitHub Actions` に設定
 
-2. **自動デプロイ**
-   - `main` ブランチまたは `claude/seo-diagnostic-app-*` ブランチにプッシュすると自動的にデプロイされます
-   - デプロイ状況は `Actions` タブで確認できます
-
-3. **公開URL**
+2. **デプロイ**
+   - ブランチにプッシュすると自動デプロイ
    - https://kim777fk-max.github.io/SEO/
-
-#### カスタムドメインの設定（オプション）
-
-1. リポジトリの `Settings` > `Pages` で `Custom domain` を設定
-2. DNSレコードを設定
-3. `Enforce HTTPS` を有効化
 
 ## 今後の拡張予定
 

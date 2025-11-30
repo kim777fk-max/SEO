@@ -7,7 +7,7 @@ class SEODiagnosticApp {
     this.seoGuides = null;
     this.htmlFetcher = new HTMLFetcher();
     this.currentResults = null;
-    this.aiAnalyzer = null;
+    this.apiEndpoint = '/api/ai-suggestions'; // Vercel Serverless Function
 
     this.init();
   }
@@ -22,9 +22,6 @@ class SEODiagnosticApp {
 
       // イベントリスナーを設定
       this.setupEventListeners();
-
-      // ローカルストレージからAPI設定を読み込み
-      this.loadAPISettings();
 
       console.log('SEO診断アプリが初期化されました');
     } catch (error) {
@@ -57,12 +54,6 @@ class SEODiagnosticApp {
     const analyzeBtn = document.getElementById('analyze-btn');
     if (analyzeBtn) {
       analyzeBtn.addEventListener('click', () => this.handleAnalyze());
-    }
-
-    // API設定保存ボタン
-    const saveApiBtn = document.getElementById('save-api-btn');
-    if (saveApiBtn) {
-      saveApiBtn.addEventListener('click', () => this.saveAPISettings());
     }
 
     // タブ切り替え
@@ -154,9 +145,9 @@ class SEODiagnosticApp {
       const scorer = new SEOScorer(parsedData, this.seoGuides);
       const scoreResults = scorer.score();
 
-      // AI分析（設定されている場合）
+      // AI分析（サーバーレス関数を呼び出し）
       this.updateStatus('AI改善提案を生成中...');
-      const aiResults = await this.aiAnalyzer.generateSuggestions(scoreResults, parsedData);
+      const aiResults = await this.generateAISuggestions(scoreResults, parsedData);
 
       // 結果を保存
       this.currentResults = {
@@ -460,43 +451,82 @@ class SEODiagnosticApp {
   }
 
   /**
-   * API設定を保存
+   * AI改善提案を生成（サーバーレス関数を呼び出し）
    */
-  saveAPISettings() {
-    const apiType = document.getElementById('api-type').value;
-    const apiKey = document.getElementById('api-key').value.trim();
+  async generateAISuggestions(scoreResults, parsedData) {
+    try {
+      const response = await fetch(this.apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          scoreResults,
+          parsedData,
+          apiType: 'openai' // サーバー側で環境変数から判断
+        })
+      });
 
-    if (apiKey) {
-      localStorage.setItem('seo_api_type', apiType);
-      localStorage.setItem('seo_api_key', apiKey);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
 
-      this.aiAnalyzer = new AIAnalyzer(apiKey, apiType);
+      const result = await response.json();
+      return result;
 
-      this.showSuccess('API設定を保存しました');
-    } else {
-      localStorage.removeItem('seo_api_type');
-      localStorage.removeItem('seo_api_key');
+    } catch (error) {
+      console.error('AI分析エラー:', error);
 
-      this.aiAnalyzer = new AIAnalyzer();
-
-      this.showSuccess('API設定をクリアしました（ルールベース分析を使用）');
+      // エラー時はローカルのルールベース分析にフォールバック
+      return this.generateLocalRuleBasedSuggestions(scoreResults, parsedData);
     }
   }
 
   /**
-   * API設定をロード
+   * ローカルのルールベース分析（フォールバック用）
    */
-  loadAPISettings() {
-    const apiType = localStorage.getItem('seo_api_type') || 'openai';
-    const apiKey = localStorage.getItem('seo_api_key') || '';
+  generateLocalRuleBasedSuggestions(scoreResults, parsedData) {
+    const priorityIssues = [];
+    const sortedIssues = [...scoreResults.issues].sort((a, b) => {
+      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
 
-    const apiTypeSelect = document.getElementById('api-type');
-    const apiKeyInput = document.getElementById('api-key');
+    const topIssues = sortedIssues.slice(0, 3);
 
-    if (apiTypeSelect) apiTypeSelect.value = apiType;
-    if (apiKeyInput) apiKeyInput.value = apiKey;
+    topIssues.forEach((issue, index) => {
+      priorityIssues.push({
+        priority: index + 1,
+        issue: issue.rule,
+        severity: issue.severity,
+        category: issue.category,
+        suggestion: issue.description,
+        implementation: 'Google Search Centralのガイドラインを参照してください。',
+        expectedImpact: 'SEOスコアが向上します。'
+      });
+    });
 
-    this.aiAnalyzer = new AIAnalyzer(apiKey || null, apiType);
+    const score = scoreResults.totalScore;
+    let generalAdvice = '';
+
+    if (score >= 90) {
+      generalAdvice = '優秀なSEOスコアです！';
+    } else if (score >= 75) {
+      generalAdvice = '良好なSEO状態です。';
+    } else if (score >= 60) {
+      generalAdvice = '平均的なSEO状態です。';
+    } else {
+      generalAdvice = '改善の余地が多くあります。';
+    }
+
+    return {
+      success: true,
+      suggestions: {
+        priorityIssues,
+        generalAdvice
+      },
+      source: 'local-fallback'
+    };
   }
 
   /**

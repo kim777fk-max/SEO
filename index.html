@@ -76,37 +76,6 @@
       </div>
     </section>
 
-    <!-- API設定セクション -->
-    <section class="card">
-      <h2>⚙️ AI設定（オプション）</h2>
-      <div class="api-settings">
-        <div class="api-info">
-          💡 OpenAI APIまたはClaude APIキーを設定すると、より詳細なAI改善提案が利用できます。
-          未設定の場合はルールベース分析を使用します。
-        </div>
-
-        <div class="input-group">
-          <label for="api-type">APIタイプ</label>
-          <select id="api-type">
-            <option value="openai">OpenAI (GPT-4)</option>
-            <option value="claude">Claude (Anthropic)</option>
-          </select>
-        </div>
-
-        <div class="input-group">
-          <label for="api-key">APIキー</label>
-          <input
-            type="password"
-            id="api-key"
-            placeholder="sk-...">
-        </div>
-
-        <button id="save-api-btn" class="btn btn-success">
-          💾 設定を保存
-        </button>
-      </div>
-    </section>
-
     <!-- 結果セクション -->
     <section id="results-section" class="card" style="display: none;">
       <h2>📊 診断結果</h2>
@@ -193,7 +162,7 @@
         このツールは<a href="https://developers.google.com/search" target="_blank" rel="noopener" style="color: var(--primary-color);">Google Search Central</a>の公式ガイドラインに基づいています。
       </p>
       <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: var(--spacing-xs);">
-        完全ローカル動作 | API設定はブラウザのLocalStorageに保存されます
+        AI機能はサーバー側で安全に管理されています | APIキーは環境変数として保護されています
       </p>
     </section>
   </div>
@@ -202,7 +171,6 @@
   <script src="./modules/fetch_html.js"></script>
   <script src="./modules/parser.js"></script>
   <script src="./modules/scorer.js"></script>
-  <script src="./modules/ai_analyzer.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
