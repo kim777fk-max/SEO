@@ -1,19 +1,12 @@
 {
-  "version": 2,
   "functions": {
     "api/fetch-spa.js": {
-      "runtime": "nodejs18.x",
       "memory": 1536,
       "maxDuration": 60
     },
     "api/ai-suggestions.js": {
-      "runtime": "nodejs18.x",
       "memory": 1024,
       "maxDuration": 20
     }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  }
 }
