@@ -15,6 +15,10 @@
     "api/keyword-analysis.js": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "api/seo-priority-analysis.js": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
