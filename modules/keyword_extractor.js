@@ -201,7 +201,7 @@ class KeywordExtractor {
   tokenize(text) {
     // 日本語と英語の両方に対応
     // 英語: スペースで分割
-    // 日本語: 簡易的に1-3文字の単語として扱う（本来はMeCabなどが必要）
+    // 日本語: N-gram + 完全な単語抽出
 
     const words = [];
 
@@ -209,9 +209,18 @@ class KeywordExtractor {
     const englishWords = text.match(/[a-z0-9]+/g) || [];
     words.push(...englishWords);
 
-    // 日本語の単語を抽出（簡易版：2-4文字のひらがな・カタカナ・漢字）
-    const japaneseWords = text.match(/[ぁ-んァ-ヶー一-龠]{2,4}/g) || [];
-    words.push(...japaneseWords);
+    // 日本語の単語を抽出
+    // 1. まず長い単語を抽出（2-15文字）
+    const longJapaneseWords = text.match(/[ぁ-んァ-ヶー一-龠]{2,15}/g) || [];
+    words.push(...longJapaneseWords);
+
+    // 2. 混合語（カタカナ+漢字など）も抽出
+    const mixedWords = text.match(/[ぁ-んァ-ヶー一-龠]+/g) || [];
+    mixedWords.forEach(word => {
+      if (word.length >= 2 && word.length <= 15) {
+        words.push(word);
+      }
+    });
 
     return words;
   }
