@@ -140,6 +140,7 @@
         <button class="tab-btn active" data-tab="overview">概要</button>
         <button class="tab-btn" data-tab="issues">問題点</button>
         <button class="tab-btn" data-tab="basics">SEOの基礎</button>
+        <button class="tab-btn" data-tab="keywords">キーワード改善</button>
         <button class="tab-btn" data-tab="suggestions">AI提案</button>
         <button class="tab-btn" data-tab="details">詳細データ</button>
         <button class="tab-btn" data-tab="html-source">HTMLソース</button>
@@ -239,6 +240,85 @@
         </div>
       </div>
 
+      <!-- タブコンテンツ: キーワード改善 -->
+      <div id="keywords-tab" class="tab-content">
+        <h3>🔑 キーワード改善提案</h3>
+        <p style="color: #666; margin-bottom: 1.5rem;">
+          ページから抽出したキーワードと、DataForSEO APIによる検索データを元に、AIがキーワード戦略を提案します。
+        </p>
+
+        <!-- ローディング -->
+        <div id="keywords-loading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p class="status-message">キーワード分析中...</p>
+        </div>
+
+        <!-- キーワード分析結果 -->
+        <div id="keywords-results" style="display: none;">
+
+          <!-- 抽出されたキーワード -->
+          <div class="keywords-section">
+            <h4>📌 抽出された主要キーワード</h4>
+            <div id="main-keywords-list">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- 検索データ -->
+          <div class="keywords-section" id="search-data-section" style="display: none;">
+            <h4>📊 検索ボリューム・競合度（DataForSEO）</h4>
+            <div id="search-data-table">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- 関連キーワード -->
+          <div class="keywords-section" id="related-keywords-section" style="display: none;">
+            <h4>💡 関連キーワード候補</h4>
+            <div id="related-keywords-list">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- ロングテールキーワード -->
+          <div class="keywords-section">
+            <h4>🎯 ロングテールキーワード候補（2-3語のフレーズ）</h4>
+            <div id="longtail-keywords-list">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- キーワード密度 -->
+          <div class="keywords-section">
+            <h4>📈 キーワード密度</h4>
+            <div id="keyword-density-list">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- 基本的な推奨事項 -->
+          <div class="keywords-section">
+            <h4>⚠️ 基本的な推奨事項</h4>
+            <div id="keyword-recommendations-list">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+
+          <!-- AI改善提案 -->
+          <div class="keywords-section" id="ai-keyword-suggestions-section" style="display: none;">
+            <h4>🤖 AIキーワード改善提案</h4>
+            <div id="ai-keyword-suggestions" class="ai-suggestions-content">
+              <!-- JavaScriptで動的生成 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- エラーメッセージ -->
+        <div id="keywords-error" style="display: none;" class="error-message">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+      </div>
+
       <!-- タブコンテンツ: AI提案 -->
       <div id="suggestions-tab" class="tab-content">
         <h3>AI改善提案</h3>
@@ -290,6 +370,7 @@
   <script src="./modules/scorer.js"></script>
   <script src="./modules/domain_power.js"></script>
   <script src="./modules/detailed_seo_checker.js"></script>
+  <script src="./modules/keyword_extractor.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

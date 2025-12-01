@@ -164,6 +164,11 @@ class SEODiagnosticApp {
       const detailedChecker = new DetailedSEOChecker(parsedData, htmlData.html || '');
       const detailedResults = detailedChecker.checkAll();
 
+      // キーワード抽出
+      this.updateStatus('キーワードを抽出中...');
+      const keywordExtractor = new KeywordExtractor(parsedData, htmlData.html || '');
+      const extractedKeywords = keywordExtractor.extract();
+
       // AI分析（サーバーレス関数を呼び出し、詳細チェック結果も含める）
       this.updateStatus('AI改善提案を生成中...');
       const aiResults = await this.generateAISuggestions(scoreResults, parsedData, detailedResults);
@@ -174,6 +179,7 @@ class SEODiagnosticApp {
         score: scoreResults,
         ai: aiResults,
         detailed: detailedResults,
+        keywords: extractedKeywords,
         rawHtml: htmlData.html || '',
         analyzedAt: new Date().toISOString()
       };
@@ -212,6 +218,9 @@ class SEODiagnosticApp {
 
     // SEOの基礎チェック結果
     this.displaySEOBasics();
+
+    // キーワード分析結果（抽出のみ、DataForSEOとAI分析はタブクリック時）
+    this.displayKeywords();
 
     // AI提案
     this.displayAISuggestions();
@@ -926,6 +935,344 @@ class SEODiagnosticApp {
     });
 
     container.innerHTML = html;
+  }
+
+  /**
+   * キーワード分析結果を表示
+   */
+  displayKeywords() {
+    if (!this.currentResults || !this.currentResults.keywords) {
+      return;
+    }
+
+    const { keywords } = this.currentResults;
+    const resultsDiv = document.getElementById('keywords-results');
+
+    if (!resultsDiv) return;
+
+    // 主要キーワードを表示
+    this.displayMainKeywords(keywords.mainKeywords);
+
+    // ロングテールキーワードを表示
+    this.displayLongtailKeywords(keywords.phrases);
+
+    // キーワード密度を表示
+    this.displayKeywordDensity(keywords.density);
+
+    // 基本的な推奨事項を表示
+    this.displayKeywordRecommendations(keywords.recommendations);
+
+    // 結果を表示
+    resultsDiv.style.display = 'block';
+
+    // タブクリック時にDataForSEOとAI分析を実行
+    const keywordsTab = document.querySelector('.tab-btn[data-tab="keywords"]');
+    if (keywordsTab && !keywordsTab.dataset.initialized) {
+      keywordsTab.dataset.initialized = 'true';
+      keywordsTab.addEventListener('click', () => this.loadKeywordAnalysis());
+    }
+  }
+
+  /**
+   * 主要キーワードを表示
+   */
+  displayMainKeywords(mainKeywords) {
+    const container = document.getElementById('main-keywords-list');
+    if (!container) return;
+
+    if (!mainKeywords || mainKeywords.length === 0) {
+      container.innerHTML = '<p style="color: #999;">キーワードが見つかりませんでした</p>';
+      return;
+    }
+
+    const html = mainKeywords.map((kw, index) => `
+      <div class="keyword-item">
+        <span class="keyword-word">${index + 1}. ${kw.word}</span>
+        <div class="keyword-stats">
+          <div class="keyword-stat">
+            <span class="keyword-stat-label">出現回数</span>
+            <span class="keyword-stat-value">${kw.count}回</span>
+          </div>
+          <div class="keyword-stat">
+            <span class="keyword-stat-label">密度</span>
+            <span class="keyword-stat-value">${kw.density}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * ロングテールキーワードを表示
+   */
+  displayLongtailKeywords(phrases) {
+    const container = document.getElementById('longtail-keywords-list');
+    if (!container) return;
+
+    if (!phrases || phrases.length === 0) {
+      container.innerHTML = '<p style="color: #999;">ロングテールキーワード候補が見つかりませんでした</p>';
+      return;
+    }
+
+    const html = phrases.map(p => `
+      <span class="phrase-item">
+        ${p.phrase}
+        <span class="phrase-count">${p.count}回</span>
+      </span>
+    `).join('');
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * キーワード密度を表示
+   */
+  displayKeywordDensity(density) {
+    const container = document.getElementById('keyword-density-list');
+    if (!container) return;
+
+    if (!density || density.length === 0) {
+      container.innerHTML = '<p style="color: #999;">データがありません</p>';
+      return;
+    }
+
+    const html = density.map(kw => {
+      const densityValue = parseFloat(kw.density);
+      const barWidth = Math.min(densityValue * 20, 100); // 5%で100%になるようにスケール
+
+      return `
+        <div class="keyword-density-item">
+          <span class="keyword-word" style="min-width: 150px;">${kw.keyword}</span>
+          <div class="keyword-density-bar">
+            <div class="keyword-density-fill" style="width: ${barWidth}%"></div>
+          </div>
+          <span class="keyword-density-value">${kw.density}</span>
+          ${!kw.optimal ? '<span style="color: #f57c00; font-size: 0.85rem; margin-left: 0.5rem;">⚠️</span>' : ''}
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * 基本的な推奨事項を表示
+   */
+  displayKeywordRecommendations(recommendations) {
+    const container = document.getElementById('keyword-recommendations-list');
+    if (!container) return;
+
+    if (!recommendations || recommendations.length === 0) {
+      container.innerHTML = '<p style="color: #4caf50;">✅ 特に改善が必要な問題は見つかりませんでした</p>';
+      return;
+    }
+
+    const html = recommendations.map(rec => `
+      <div class="keyword-recommendation ${rec.priority}">
+        <strong>[${rec.type.toUpperCase()}] ${rec.priority === 'high' ? '🔴 重要' : rec.priority === 'medium' ? '🟡 推奨' : 'ℹ️ 情報'}</strong><br>
+        ${rec.message}
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * DataForSEOとAIキーワード分析を読み込み（タブクリック時）
+   */
+  async loadKeywordAnalysis() {
+    if (!this.currentResults || !this.currentResults.keywords) {
+      return;
+    }
+
+    // 既にロード済みの場合はスキップ
+    if (this.currentResults.keywords.dataforSeo || this.currentResults.keywords.aiAnalysis) {
+      return;
+    }
+
+    try {
+      const loadingDiv = document.getElementById('keywords-loading');
+      if (loadingDiv) {
+        loadingDiv.style.display = 'block';
+      }
+
+      // 主要キーワード（上位5個）を取得
+      const topKeywords = this.currentResults.keywords.mainKeywords
+        .slice(0, 5)
+        .map(kw => kw.word);
+
+      if (topKeywords.length === 0) {
+        throw new Error('キーワードが見つかりませんでした');
+      }
+
+      // DataForSEO APIを呼び出し
+      console.log('Calling DataForSEO API with keywords:', topKeywords);
+      const dataforSeoResponse = await fetch('/api/dataforseo-keywords', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          keywords: topKeywords,
+          location: 'Japan',
+          language: 'ja'
+        })
+      });
+
+      if (!dataforSeoResponse.ok) {
+        throw new Error(`DataForSEO API error: ${dataforSeoResponse.status}`);
+      }
+
+      const dataforSeoData = await dataforSeoResponse.json();
+      console.log('DataForSEO response:', dataforSeoData);
+
+      // DataForSEOデータを表示
+      if (dataforSeoData.keywords && dataforSeoData.keywords.length > 0) {
+        this.displaySearchData(dataforSeoData.keywords);
+      }
+
+      if (dataforSeoData.relatedKeywords && dataforSeoData.relatedKeywords.length > 0) {
+        this.displayRelatedKeywords(dataforSeoData.relatedKeywords);
+      }
+
+      // AIキーワード分析を呼び出し
+      console.log('Calling AI keyword analysis...');
+      const aiResponse = await fetch('/api/keyword-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          extractedKeywords: this.currentResults.keywords,
+          dataforSeoData: dataforSeoData,
+          parsedData: this.currentResults.parsed,
+          apiType: 'openai'
+        })
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error(`AI analysis error: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      console.log('AI analysis response:', aiData);
+
+      // AI提案を表示
+      this.displayAIKeywordSuggestions(aiData.suggestions);
+
+      // 結果を保存
+      this.currentResults.keywords.dataforSeo = dataforSeoData;
+      this.currentResults.keywords.aiAnalysis = aiData.suggestions;
+
+      if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+      }
+
+    } catch (error) {
+      console.error('Keyword analysis error:', error);
+      const errorDiv = document.getElementById('keywords-error');
+      const loadingDiv = document.getElementById('keywords-loading');
+
+      if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+      }
+
+      if (errorDiv) {
+        errorDiv.textContent = `エラー: ${error.message}`;
+        errorDiv.style.display = 'block';
+      }
+    }
+  }
+
+  /**
+   * 検索データを表示
+   */
+  displaySearchData(keywords) {
+    const section = document.getElementById('search-data-section');
+    const container = document.getElementById('search-data-table');
+    if (!container || !section) return;
+
+    const html = `
+      <table class="keyword-data-table">
+        <thead>
+          <tr>
+            <th>キーワード</th>
+            <th>検索ボリューム/月</th>
+            <th>競合度</th>
+            <th>CPC</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${keywords.map(kw => `
+            <tr>
+              <td><strong>${kw.keyword}</strong></td>
+              <td>${kw.search_volume !== null ? kw.search_volume.toLocaleString() : 'N/A'}</td>
+              <td>
+                ${kw.competition_level ? `<span class="keyword-competition ${kw.competition_level}">${kw.competition_level}</span>` : 'N/A'}
+              </td>
+              <td>${kw.cpc !== null ? '¥' + kw.cpc.toFixed(2) : 'N/A'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    container.innerHTML = html;
+    section.style.display = 'block';
+  }
+
+  /**
+   * 関連キーワードを表示
+   */
+  displayRelatedKeywords(relatedKeywords) {
+    const section = document.getElementById('related-keywords-section');
+    const container = document.getElementById('related-keywords-list');
+    if (!container || !section) return;
+
+    const html = relatedKeywords.map((kw, index) => `
+      <div class="keyword-item">
+        <span class="keyword-word">${index + 1}. ${kw.keyword}</span>
+        <div class="keyword-stats">
+          <div class="keyword-stat">
+            <span class="keyword-stat-label">検索ボリューム/月</span>
+            <span class="keyword-stat-value">${kw.search_volume ? kw.search_volume.toLocaleString() : 'N/A'}</span>
+          </div>
+          <div class="keyword-stat">
+            <span class="keyword-stat-label">競合度</span>
+            <span class="keyword-competition ${kw.competition_level}">${kw.competition_level || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
+    section.style.display = 'block';
+  }
+
+  /**
+   * AIキーワード提案を表示
+   */
+  displayAIKeywordSuggestions(suggestions) {
+    const section = document.getElementById('ai-keyword-suggestions-section');
+    const container = document.getElementById('ai-keyword-suggestions');
+    if (!container || !section) return;
+
+    // マークダウン風のテキストをHTMLに変換（簡易版）
+    let html = suggestions
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/###\s+(.+?)<br>/g, '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1976d2;">$1</h4>')
+      .replace(/##\s+(.+?)<br>/g, '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1976d2;">$1</h3>')
+      .replace(/- (.+?)<br>/g, '<li>$1</li>');
+
+    // リストタグを整形
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul style="margin: 0.5rem 0; padding-left: 1.5rem;">$&</ul>');
+
+    container.innerHTML = html;
+    section.style.display = 'block';
   }
 
   /**

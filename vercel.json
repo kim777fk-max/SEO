@@ -7,6 +7,14 @@
     "api/ai-suggestions.js": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "api/dataforseo-keywords.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/keyword-analysis.js": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
