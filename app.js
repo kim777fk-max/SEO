@@ -977,7 +977,7 @@ class SEODiagnosticApp {
     const container = document.getElementById('priority-summary');
     if (!container) return;
 
-    const passRate = summary.totalItems > 0 ? summary.percentage : 0;
+    const passRate = summary.percentage || 0;
     const scoreColor = passRate >= 80 ? '#4CAF50' : passRate >= 60 ? '#f57c00' : '#d32f2f';
 
     container.innerHTML = `
@@ -986,23 +986,34 @@ class SEODiagnosticApp {
           <div class="priority-summary-score" style="color: ${scoreColor};">
             ${summary.passedItems}/${summary.totalItems}
           </div>
-          <div class="priority-summary-label">合格項目</div>
+          <div class="priority-summary-label">全49項目中の合格数</div>
           <div class="priority-summary-percentage" style="color: ${scoreColor};">
             ${passRate}%
+          </div>
+          <div class="priority-summary-sublabel" style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.9;">
+            ※合格率はチェック可能項目（${summary.checkableItems}項目）で計算
           </div>
         </div>
         <div class="priority-summary-details">
           <div class="priority-summary-stat">
             <div class="stat-value" style="color: #4CAF50;">${summary.passedItems}</div>
-            <div class="stat-label">合格</div>
+            <div class="stat-label">✅ 合格</div>
           </div>
           <div class="priority-summary-stat">
             <div class="stat-value" style="color: #d32f2f;">${summary.failedItems}</div>
-            <div class="stat-label">不合格</div>
+            <div class="stat-label">❌ 不合格</div>
           </div>
           <div class="priority-summary-stat">
-            <div class="stat-value" style="color: #1976d2;">${summary.totalItems}</div>
-            <div class="stat-label">総項目数</div>
+            <div class="stat-value" style="color: #f57c00;">${summary.warningItems || 0}</div>
+            <div class="stat-label">⚠️ 警告</div>
+          </div>
+          <div class="priority-summary-stat">
+            <div class="stat-value" style="color: #1976d2;">${summary.infoItems || 0}</div>
+            <div class="stat-label">ℹ️ 情報</div>
+          </div>
+          <div class="priority-summary-stat">
+            <div class="stat-value" style="color: #666;">${summary.totalItems}</div>
+            <div class="stat-label">📋 総項目</div>
           </div>
         </div>
       </div>
@@ -1031,7 +1042,9 @@ class SEODiagnosticApp {
     };
 
     const html = categories.map(category => {
-      const passRate = category.total > 0 ? Math.round((category.passed / category.total) * 100) : 0;
+      // info項目を除外した合格率を計算
+      const checkableCount = category.checks.filter(c => c.status !== 'info').length;
+      const passRate = checkableCount > 0 ? Math.round((category.passed / checkableCount) * 100) : 0;
       const categoryColor = passRate >= 80 ? '#4CAF50' : passRate >= 60 ? '#f57c00' : '#d32f2f';
 
       const checksHtml = category.checks.map(check => {
@@ -1068,6 +1081,7 @@ class SEODiagnosticApp {
               <div class="category-score-percentage" style="color: ${categoryColor};">
                 ${passRate}%
               </div>
+              ${checkableCount !== category.total ? `<div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">(${checkableCount}項目で評価)</div>` : ''}
             </div>
           </div>
           <div class="priority-category-checks">

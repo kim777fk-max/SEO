@@ -641,25 +641,42 @@ class SEOPriorityChecker {
    * サマリーを計算
    */
   calculateSummary() {
-    let totalItems = 0;
+    let totalItems = 0;        // 全項目数（info含む）- 49項目
+    let checkableItems = 0;    // チェック可能項目数（info除外）- 30項目
     let passedItems = 0;
     let failedItems = 0;
+    let warningItems = 0;
+    let infoItems = 0;
 
     this.results.categories.forEach(category => {
-      totalItems += category.total;
-      passedItems += category.passed;
       category.checks.forEach(check => {
-        if (check.status === 'fail') {
+        totalItems++;  // 全項目をカウント
+
+        if (check.status === 'pass') {
+          passedItems++;
+          checkableItems++;  // チェック可能項目
+        } else if (check.status === 'fail') {
           failedItems++;
+          checkableItems++;  // チェック可能項目
+        } else if (check.status === 'warning') {
+          warningItems++;
+          checkableItems++;  // チェック可能項目
+        } else if (check.status === 'info') {
+          infoItems++;
+          // チェック可能項目にはカウントしない
         }
       });
     });
 
-    this.results.summary.totalItems = totalItems;
+    this.results.summary.totalItems = totalItems;           // 49項目（全項目）
+    this.results.summary.checkableItems = checkableItems;   // 30項目（info除外）
     this.results.summary.passedItems = passedItems;
     this.results.summary.failedItems = failedItems;
+    this.results.summary.warningItems = warningItems;
+    this.results.summary.infoItems = infoItems;
     this.results.summary.score = passedItems;
-    this.results.summary.percentage = totalItems > 0 ? Math.round((passedItems / totalItems) * 100) : 0;
+    // 合格率はチェック可能項目（info除外）で計算
+    this.results.summary.percentage = checkableItems > 0 ? Math.round((passedItems / checkableItems) * 100) : 0;
   }
 }
 
