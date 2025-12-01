@@ -110,7 +110,7 @@ class SEOPriorityChecker {
       description: 'タイトルはページ内容を正確かつ簡潔に示す必要がある',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -118,7 +118,7 @@ class SEOPriorityChecker {
    * 2. メタディスクリプション
    */
   checkMetaDescription() {
-    const description = this.data.meta && this.data.meta.description ? this.data.meta.description : '';
+    const description = this.data.metaDescription && this.data.metaDescription.text ? this.data.metaDescription.text : '';
     const descLength = description ? description.length : 0;
 
     const checks = [
@@ -199,7 +199,7 @@ class SEOPriorityChecker {
       description: '重要ページを Google に知らせる手段',
       checks: checks,
       passed: 0,
-      total: 0 // info項目のみのため
+      total: checks.length
     };
   }
 
@@ -208,7 +208,7 @@ class SEOPriorityChecker {
    */
   checkURL() {
     const url = this.data.url || '';
-    const hasCanonical = this.data.meta && this.data.meta.canonical;
+    const hasCanonical = this.data.metaTags && this.data.metaTags.canonical;
     const hasParams = url.match(/\?.*=/);
 
     const checks = [
@@ -222,7 +222,7 @@ class SEOPriorityChecker {
         id: 'url-canonical',
         label: 'canonical が正しく設定されている',
         status: hasCanonical ? 'pass' : 'warning',
-        detail: hasCanonical ? `設定済み: ${this.data.meta.canonical}` : '設定を推奨します'
+        detail: hasCanonical ? `設定済み: ${this.data.metaTags.canonical}` : '設定を推奨します'
       },
       {
         id: 'url-params',
@@ -290,7 +290,7 @@ class SEOPriorityChecker {
       description: 'リッチリザルトの対象になる',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -335,7 +335,7 @@ class SEOPriorityChecker {
       description: '重要コンテンツは JS に依存しない方式を推奨',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -343,7 +343,7 @@ class SEOPriorityChecker {
    * 7. モバイルフレンドリー
    */
   checkMobileFriendly() {
-    const hasViewport = this.data.meta && this.data.meta.viewport;
+    const hasViewport = this.data.metaTags && this.data.metaTags.viewport;
     const hasResponsive = this.html.match(/responsive|viewport|media\s+query/gi);
 
     const checks = [
@@ -380,7 +380,7 @@ class SEOPriorityChecker {
       description: 'Google はモバイル版のページ内容のみを使用',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -422,7 +422,7 @@ class SEOPriorityChecker {
       description: 'LCP・CLS・INP が評価対象',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -466,7 +466,7 @@ class SEOPriorityChecker {
       description: 'Google がサイト階層を理解する助けとなる',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -512,7 +512,7 @@ class SEOPriorityChecker {
       description: '人のために書かれたコンテンツを高く評価',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -553,7 +553,7 @@ class SEOPriorityChecker {
       description: 'SNS共有時の見栄えを改善',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
@@ -601,7 +601,7 @@ class SEOPriorityChecker {
    * 13. robots.txt / メタロボットタグ
    */
   checkRobots() {
-    const robotsMeta = this.data.meta && this.data.meta.robots ? this.data.meta.robots : null;
+    const robotsMeta = this.data.metaTags && this.data.metaTags.robots ? this.data.metaTags.robots : null;
     const hasNoIndex = robotsMeta && robotsMeta.toLowerCase().includes('noindex');
     const hasNoFollow = robotsMeta && robotsMeta.toLowerCase().includes('nofollow');
 
@@ -621,8 +621,8 @@ class SEOPriorityChecker {
       {
         id: 'robots-conflict',
         label: 'noindex / canonical の競合がない',
-        status: hasNoIndex && this.data.meta && this.data.meta.canonical ? 'fail' : 'pass',
-        detail: hasNoIndex && this.data.meta && this.data.meta.canonical ? 'noindexとcanonicalが競合しています' : '問題ありません'
+        status: hasNoIndex && this.data.metaTags && this.data.metaTags.canonical ? 'fail' : 'pass',
+        detail: hasNoIndex && this.data.metaTags && this.data.metaTags.canonical ? 'noindexとcanonicalが競合しています' : '問題ありません'
       }
     ];
 
@@ -633,7 +633,7 @@ class SEOPriorityChecker {
       description: 'クロール・インデックス制御',
       checks: checks,
       passed: checks.filter(c => c.status === 'pass').length,
-      total: checks.filter(c => c.status !== 'info').length
+      total: checks.length
     };
   }
 
