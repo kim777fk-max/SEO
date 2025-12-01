@@ -1,0 +1,271 @@
+{
+  "categories": {
+    "technicalSEO": {
+      "name": "Technical SEO",
+      "weight": 30,
+      "rules": [
+        {
+          "id": "title_exists",
+          "name": "Title Tag Exists",
+          "description": "Every page must have a unique, descriptive title tag",
+          "severity": "critical",
+          "points": 5,
+          "check": "hasTitle"
+        },
+        {
+          "id": "title_length",
+          "name": "Title Tag Length",
+          "description": "Title should be 50-60 characters for optimal display in search results",
+          "severity": "medium",
+          "points": 3,
+          "check": "titleLength",
+          "params": { "min": 30, "max": 60, "ideal_min": 50 }
+        },
+        {
+          "id": "meta_description_exists",
+          "name": "Meta Description Exists",
+          "description": "Meta description helps users understand page content in search results",
+          "severity": "high",
+          "points": 4,
+          "check": "hasMetaDescription"
+        },
+        {
+          "id": "meta_description_length",
+          "name": "Meta Description Length",
+          "description": "Meta description should be 150-160 characters",
+          "severity": "medium",
+          "points": 2,
+          "check": "metaDescriptionLength",
+          "params": { "min": 120, "max": 160, "ideal_min": 150 }
+        },
+        {
+          "id": "h1_exists",
+          "name": "H1 Tag Exists",
+          "description": "Every page should have exactly one H1 tag",
+          "severity": "critical",
+          "points": 4,
+          "check": "hasH1"
+        },
+        {
+          "id": "h1_single",
+          "name": "Single H1 Tag",
+          "description": "Page should have only one H1 tag",
+          "severity": "medium",
+          "points": 2,
+          "check": "singleH1"
+        },
+        {
+          "id": "heading_hierarchy",
+          "name": "Proper Heading Hierarchy",
+          "description": "Headings should follow proper hierarchy (H1 > H2 > H3, etc.)",
+          "severity": "medium",
+          "points": 3,
+          "check": "headingHierarchy"
+        },
+        {
+          "id": "canonical_tag",
+          "name": "Canonical Tag",
+          "description": "Canonical tag helps prevent duplicate content issues",
+          "severity": "medium",
+          "points": 2,
+          "check": "hasCanonical"
+        },
+        {
+          "id": "robots_meta",
+          "name": "Robots Meta Tag",
+          "description": "Proper robots meta configuration",
+          "severity": "low",
+          "points": 1,
+          "check": "hasRobotsMeta"
+        },
+        {
+          "id": "viewport_meta",
+          "name": "Viewport Meta Tag",
+          "description": "Viewport meta tag is essential for mobile-friendly pages",
+          "severity": "high",
+          "points": 4,
+          "check": "hasViewport"
+        }
+      ]
+    },
+    "content": {
+      "name": "Helpful Content",
+      "weight": 25,
+      "rules": [
+        {
+          "id": "content_length",
+          "name": "Sufficient Content Length",
+          "description": "Page should have substantial content (at least 300 words)",
+          "severity": "medium",
+          "points": 5,
+          "check": "contentLength",
+          "params": { "min": 300, "recommended": 1000 }
+        },
+        {
+          "id": "word_count",
+          "name": "Word Count",
+          "description": "Adequate word count indicates comprehensive content",
+          "severity": "medium",
+          "points": 5,
+          "check": "wordCount"
+        },
+        {
+          "id": "images_with_alt",
+          "name": "Images Have Alt Text",
+          "description": "All images should have descriptive alt attributes",
+          "severity": "high",
+          "points": 5,
+          "check": "imagesWithAlt"
+        },
+        {
+          "id": "internal_links",
+          "name": "Internal Links",
+          "description": "Page should have internal links to related content",
+          "severity": "low",
+          "points": 3,
+          "check": "hasInternalLinks"
+        },
+        {
+          "id": "external_links",
+          "name": "External Links",
+          "description": "Links to authoritative external sources when appropriate",
+          "severity": "low",
+          "points": 2,
+          "check": "hasExternalLinks"
+        },
+        {
+          "id": "readability",
+          "name": "Content Readability",
+          "description": "Content should be easy to read with proper paragraphs",
+          "severity": "medium",
+          "points": 5,
+          "check": "readability"
+        }
+      ]
+    },
+    "eeat": {
+      "name": "E-E-A-T (Experience, Expertise, Authoritativeness, Trust)",
+      "weight": 20,
+      "rules": [
+        {
+          "id": "author_info",
+          "name": "Author Information",
+          "description": "Content should have clear author attribution",
+          "severity": "medium",
+          "points": 5,
+          "check": "hasAuthorInfo"
+        },
+        {
+          "id": "publish_date",
+          "name": "Publication Date",
+          "description": "Content should show when it was published or updated",
+          "severity": "medium",
+          "points": 5,
+          "check": "hasPublishDate"
+        },
+        {
+          "id": "https_protocol",
+          "name": "HTTPS Protocol",
+          "description": "Site should use HTTPS for security and trust",
+          "severity": "high",
+          "points": 5,
+          "check": "isHTTPS"
+        },
+        {
+          "id": "contact_info",
+          "name": "Contact Information",
+          "description": "Site should provide contact information",
+          "severity": "low",
+          "points": 5,
+          "check": "hasContactInfo"
+        }
+      ]
+    },
+    "structuredData": {
+      "name": "Structured Data",
+      "weight": 15,
+      "rules": [
+        {
+          "id": "json_ld_present",
+          "name": "JSON-LD Present",
+          "description": "Structured data helps search engines understand content",
+          "severity": "medium",
+          "points": 8,
+          "check": "hasJsonLd"
+        },
+        {
+          "id": "schema_org",
+          "name": "Schema.org Markup",
+          "description": "Valid Schema.org structured data",
+          "severity": "medium",
+          "points": 7,
+          "check": "hasSchemaOrg"
+        }
+      ]
+    },
+    "pageExperience": {
+      "name": "Page Experience",
+      "weight": 10,
+      "rules": [
+        {
+          "id": "mobile_friendly",
+          "name": "Mobile-Friendly",
+          "description": "Page should be optimized for mobile devices",
+          "severity": "critical",
+          "points": 5,
+          "check": "isMobileFriendly"
+        },
+        {
+          "id": "lang_attribute",
+          "name": "Language Attribute",
+          "description": "HTML should have a language attribute",
+          "severity": "low",
+          "points": 2,
+          "check": "hasLangAttribute"
+        },
+        {
+          "id": "charset_defined",
+          "name": "Character Set Defined",
+          "description": "Character encoding should be specified",
+          "severity": "medium",
+          "points": 3,
+          "check": "hasCharset"
+        }
+      ]
+    }
+  },
+  "scoring": {
+    "excellent": { "min": 90, "max": 100, "label": "優秀", "color": "#4CAF50" },
+    "good": { "min": 75, "max": 89, "label": "良好", "color": "#8BC34A" },
+    "average": { "min": 60, "max": 74, "label": "平均", "color": "#FFC107" },
+    "poor": { "min": 40, "max": 59, "label": "要改善", "color": "#FF9800" },
+    "critical": { "min": 0, "max": 39, "label": "重大な問題", "color": "#F44336" }
+  },
+  "guidelines": {
+    "helpful_content": {
+      "title": "Helpful Content",
+      "url": "https://developers.google.com/search/docs/fundamentals/creating-helpful-content",
+      "description": "Create content primarily for people, not search engines"
+    },
+    "eeat": {
+      "title": "E-E-A-T",
+      "url": "https://developers.google.com/search/docs/fundamentals/creating-helpful-content#who-when-how",
+      "description": "Demonstrate Experience, Expertise, Authoritativeness, and Trust"
+    },
+    "technical_seo": {
+      "title": "Technical SEO Best Practices",
+      "url": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+      "description": "Follow technical SEO best practices for better crawling and indexing"
+    },
+    "structured_data": {
+      "title": "Structured Data",
+      "url": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+      "description": "Use structured data to help Google understand your content"
+    },
+    "page_experience": {
+      "title": "Page Experience",
+      "url": "https://developers.google.com/search/docs/appearance/page-experience",
+      "description": "Provide a great page experience across all devices"
+    }
+  }
+}

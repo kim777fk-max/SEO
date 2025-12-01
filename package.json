@@ -1,0 +1,13 @@
+{
+  "name": "seo-audit-app",
+  "version": "1.0.0",
+  "description": "SEO diagnostic web app following Google guidelines",
+  "type": "module",
+  "scripts": {
+    "lint": "echo 'no lint configured'",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+    "highlight.js": "^11.9.0"
+  }
+}
