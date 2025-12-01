@@ -140,6 +140,7 @@
         <button class="tab-btn active" data-tab="overview">概要</button>
         <button class="tab-btn" data-tab="issues">問題点</button>
         <button class="tab-btn" data-tab="basics">SEOの基礎</button>
+        <button class="tab-btn" data-tab="priority">SEO優先確認</button>
         <button class="tab-btn" data-tab="keywords">キーワード改善</button>
         <button class="tab-btn" data-tab="suggestions">AI提案</button>
         <button class="tab-btn" data-tab="details">詳細データ</button>
@@ -237,6 +238,44 @@
           <div id="seo-basics-priority-d">
             <!-- JavaScriptで動的生成 -->
           </div>
+        </div>
+      </div>
+
+      <!-- タブコンテンツ: SEO優先確認 -->
+      <div id="priority-tab" class="tab-content">
+        <h3>📋 SEO優先確認チェック（Google Search Central 公式準拠）</h3>
+        <p style="color: #666; margin-bottom: 1.5rem;">
+          Google Search Central公式ガイドラインに基づく13カテゴリ・全49項目のチェックリスト。<br>
+          各項目に公式リンクと改善提案を含みます。
+        </p>
+
+        <!-- 総合スコア -->
+        <div id="priority-summary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+
+        <!-- チェックカテゴリ一覧 -->
+        <div id="priority-categories">
+          <!-- JavaScriptで動的生成 -->
+        </div>
+
+        <!-- AI改善提案 -->
+        <div id="priority-ai-section" style="display: none; margin-top: 2rem;">
+          <h3>🤖 AI改善提案</h3>
+          <div id="priority-ai-analysis" style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem;">
+            <!-- JavaScriptで動的生成 -->
+          </div>
+        </div>
+
+        <!-- ローディング -->
+        <div id="priority-ai-loading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p class="status-message">AI分析中...</p>
+        </div>
+
+        <!-- エラー -->
+        <div id="priority-error" style="display: none;" class="error-message">
+          <!-- JavaScriptで動的生成 -->
         </div>
       </div>
 
@@ -371,6 +410,7 @@
   <script src="./modules/domain_power.js"></script>
   <script src="./modules/detailed_seo_checker.js"></script>
   <script src="./modules/keyword_extractor.js"></script>
+  <script src="./modules/seo_priority_checker.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

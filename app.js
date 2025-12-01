@@ -169,6 +169,11 @@ class SEODiagnosticApp {
       const keywordExtractor = new KeywordExtractor(parsedData, htmlData.html || '');
       const extractedKeywords = keywordExtractor.extract();
 
+      // SEO優先確認チェック
+      this.updateStatus('SEO優先確認チェックを実行中...');
+      const priorityChecker = new SEOPriorityChecker(parsedData, htmlData.html || '');
+      const priorityResults = priorityChecker.checkAll();
+
       // AI分析（サーバーレス関数を呼び出し、詳細チェック結果も含める）
       this.updateStatus('AI改善提案を生成中...');
       const aiResults = await this.generateAISuggestions(scoreResults, parsedData, detailedResults);
@@ -180,6 +185,7 @@ class SEODiagnosticApp {
         ai: aiResults,
         detailed: detailedResults,
         keywords: extractedKeywords,
+        priority: priorityResults,
         rawHtml: htmlData.html || '',
         analyzedAt: new Date().toISOString()
       };
@@ -218,6 +224,9 @@ class SEODiagnosticApp {
 
     // SEOの基礎チェック結果
     this.displaySEOBasics();
+
+    // SEO優先確認チェック結果
+    this.displaySEOPriority();
 
     // キーワード分析結果（抽出のみ、DataForSEOとAI分析はタブクリック時）
     this.displayKeywords();
@@ -933,6 +942,245 @@ class SEODiagnosticApp {
         </div>
       `;
     });
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * SEO優先確認チェック結果を表示
+   */
+  displaySEOPriority() {
+    if (!this.currentResults || !this.currentResults.priority) {
+      return;
+    }
+
+    const { priority } = this.currentResults;
+
+    // サマリーを表示
+    this.displayPrioritySummary(priority.summary);
+
+    // カテゴリ別チェック結果を表示
+    this.displayPriorityCategories(priority.categories);
+
+    // タブクリック時にAI分析を実行
+    const priorityTab = document.querySelector('.tab-btn[data-tab="priority"]');
+    if (priorityTab && !priorityTab.dataset.initialized) {
+      priorityTab.dataset.initialized = 'true';
+      priorityTab.addEventListener('click', () => this.loadPriorityAIAnalysis());
+    }
+  }
+
+  /**
+   * SEO優先確認サマリーを表示
+   */
+  displayPrioritySummary(summary) {
+    const container = document.getElementById('priority-summary');
+    if (!container) return;
+
+    const passRate = summary.totalItems > 0 ? summary.percentage : 0;
+    const scoreColor = passRate >= 80 ? '#4CAF50' : passRate >= 60 ? '#f57c00' : '#d32f2f';
+
+    container.innerHTML = `
+      <div class="priority-summary">
+        <div class="priority-summary-main">
+          <div class="priority-summary-score" style="color: ${scoreColor};">
+            ${summary.passedItems}/${summary.totalItems}
+          </div>
+          <div class="priority-summary-label">合格項目</div>
+          <div class="priority-summary-percentage" style="color: ${scoreColor};">
+            ${passRate}%
+          </div>
+        </div>
+        <div class="priority-summary-details">
+          <div class="priority-summary-stat">
+            <div class="stat-value" style="color: #4CAF50;">${summary.passedItems}</div>
+            <div class="stat-label">合格</div>
+          </div>
+          <div class="priority-summary-stat">
+            <div class="stat-value" style="color: #d32f2f;">${summary.failedItems}</div>
+            <div class="stat-label">不合格</div>
+          </div>
+          <div class="priority-summary-stat">
+            <div class="stat-value" style="color: #1976d2;">${summary.totalItems}</div>
+            <div class="stat-label">総項目数</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * SEO優先確認カテゴリ別チェック結果を表示
+   */
+  displayPriorityCategories(categories) {
+    const container = document.getElementById('priority-categories');
+    if (!container || !categories) return;
+
+    const statusIcons = {
+      'pass': '✅',
+      'fail': '❌',
+      'warning': '⚠️',
+      'info': 'ℹ️'
+    };
+
+    const statusLabels = {
+      'pass': '合格',
+      'fail': '不合格',
+      'warning': '警告',
+      'info': '情報'
+    };
+
+    const html = categories.map(category => {
+      const passRate = category.total > 0 ? Math.round((category.passed / category.total) * 100) : 0;
+      const categoryColor = passRate >= 80 ? '#4CAF50' : passRate >= 60 ? '#f57c00' : '#d32f2f';
+
+      const checksHtml = category.checks.map(check => {
+        const icon = statusIcons[check.status] || '•';
+
+        return `
+          <div class="priority-check-item ${check.status}">
+            <div class="priority-check-icon">${icon}</div>
+            <div class="priority-check-content">
+              <div class="priority-check-header">
+                <span class="priority-check-label">${check.label}</span>
+                <span class="priority-check-status-badge ${check.status}">${statusLabels[check.status]}</span>
+              </div>
+              <div class="priority-check-detail">${check.detail}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="priority-category">
+          <div class="priority-category-header">
+            <div class="priority-category-title">
+              <h4>${category.category}</h4>
+              <p class="priority-category-description">${category.description}</p>
+              <a href="${category.link}" target="_blank" rel="noopener noreferrer" class="priority-category-link">
+                📖 Google公式ガイドを見る
+              </a>
+            </div>
+            <div class="priority-category-score">
+              <div class="category-score-value" style="color: ${categoryColor};">
+                ${category.passed}/${category.total}
+              </div>
+              <div class="category-score-percentage" style="color: ${categoryColor};">
+                ${passRate}%
+              </div>
+            </div>
+          </div>
+          <div class="priority-category-checks">
+            ${checksHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * SEO優先確認AI分析を読み込み（タブクリック時）
+   */
+  async loadPriorityAIAnalysis() {
+    if (!this.currentResults || !this.currentResults.priority) {
+      return;
+    }
+
+    // 既にロード済みの場合はスキップ
+    if (this.currentResults.priority.aiAnalysis) {
+      return;
+    }
+
+    try {
+      const loadingDiv = document.getElementById('priority-ai-loading');
+      const aiSection = document.getElementById('priority-ai-section');
+      const errorDiv = document.getElementById('priority-error');
+
+      if (loadingDiv) {
+        loadingDiv.style.display = 'block';
+      }
+
+      if (errorDiv) {
+        errorDiv.style.display = 'none';
+      }
+
+      console.log('Calling SEO Priority AI Analysis...');
+
+      // AI分析APIを呼び出し
+      const response = await fetch('/api/seo-priority-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          priorityResults: this.currentResults.priority,
+          parsedData: this.currentResults.parsed,
+          apiType: 'openai'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI分析API error: ${response.status}`);
+      }
+
+      const aiData = await response.json();
+      console.log('SEO Priority AI analysis response:', aiData);
+
+      // AI分析結果を表示
+      if (aiData.analysis) {
+        this.displayPriorityAIAnalysis(aiData.analysis);
+
+        // 結果を保存
+        this.currentResults.priority.aiAnalysis = aiData.analysis;
+      }
+
+      if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+      }
+
+      if (aiSection) {
+        aiSection.style.display = 'block';
+      }
+
+    } catch (error) {
+      console.error('SEO Priority AI analysis error:', error);
+
+      const loadingDiv = document.getElementById('priority-ai-loading');
+      const errorDiv = document.getElementById('priority-error');
+
+      if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+      }
+
+      if (errorDiv) {
+        errorDiv.textContent = `エラー: ${error.message}`;
+        errorDiv.style.display = 'block';
+      }
+    }
+  }
+
+  /**
+   * SEO優先確認AI分析結果を表示
+   */
+  displayPriorityAIAnalysis(analysis) {
+    const container = document.getElementById('priority-ai-content');
+    if (!container) return;
+
+    // マークダウン風のテキストをHTMLに変換（簡易版）
+    let html = analysis
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/###\s+(.+?)<br>/g, '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1976d2;">$1</h4>')
+      .replace(/##\s+(.+?)<br>/g, '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1976d2;">$1</h3>')
+      .replace(/#\s+(.+?)<br>/g, '<h2 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1976d2;">$1</h2>')
+      .replace(/- (.+?)<br>/g, '<li>$1</li>')
+      .replace(/```([\s\S]*?)```/g, '<pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;"><code>$1</code></pre>');
+
+    // リストタグを整形
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul style="margin: 0.5rem 0; padding-left: 1.5rem;">$&</ul>');
 
     container.innerHTML = html;
   }
