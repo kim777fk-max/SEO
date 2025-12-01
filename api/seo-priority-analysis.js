@@ -119,12 +119,14 @@ function buildPrompt(priorityResults, parsedData) {
 【ページ情報】
 URL: ${parsedData.url}
 タイトル: ${parsedData.title?.text || 'なし'}
-メタディスクリプション: ${parsedData.meta?.description || 'なし'}
+メタディスクリプション: ${parsedData.metaDescription?.text || 'なし'}
 
 【チェック結果サマリー】
-総合スコア: ${summary.score}/${summary.totalItems}点（${summary.percentage}%）
-合格項目: ${summary.passedItems}
-不合格項目: ${summary.failedItems}
+総合スコア: ${summary.passedItems}/${summary.checkableItems}点（${summary.percentage}%）
+・合格: ${summary.passedItems}項目
+・不合格: ${summary.failedItems}項目
+・警告: ${summary.warningItems}項目
+・情報: ${summary.infoItems}項目
 
 【不合格項目（優先度：高）】
 ${failedChecks.length > 0 ? failedChecks.map((item, i) => `
@@ -143,32 +145,64 @@ ${i + 1}. [${item.category}]
 `).join('\n') : 'なし'}
 
 【依頼内容】
-以下の観点で改善提案を行ってください：
+以下の構成で、具体的で実行可能な改善提案を提供してください。**必ず全てのセクションに詳細な内容を記載してください。**
 
-1. **最優先改善項目TOP3**
-   - 不合格項目の中で最も重要な3つを選定
-   - それぞれの改善方法を具体的に記載
-   - Google公式ガイドラインへのリンクを含める
+## 1. 最優先改善項目TOP3
 
-2. **中期的改善項目**
-   - 警告項目の改善方法
-   - 実装の難易度と効果を記載
+不合格項目の中で最も重要な3つを選定し、以下の形式で記載：
 
-3. **具体的な実装手順**
-   - 各改善項目について、具体的なコード例や設定方法
-   - 優先順位付き（高／中／低）
+### 1-1. [項目名]
+- **問題点**: 現在の状況と何が問題か
+- **改善方法**: 具体的な修正手順（必須）
+- **コード例**: HTMLまたは設定のサンプルコード（必須）
+- **参考リンク**: Google公式ガイドライン
 
-4. **期待される効果**
-   - 改善後のSEO効果
-   - 検索順位やCTRへの影響
+（1-2、1-3も同様）
 
-5. **実装時の注意点**
-   - よくある間違い
-   - Google公式ガイドラインで推奨されている方法
+## 2. 中期的改善項目
 
-**回答形式**
-マークダウン形式で、見出しと箇条書きを使って分かりやすく記載してください。
-コード例がある場合は、コードブロックで囲んでください。
+警告項目について、以下を記載：
+- 各警告項目の改善方法
+- 実装難易度（高／中／低）
+- 期待される効果
+
+## 3. 具体的な実装手順
+
+**必ず各改善項目について、コピー&ペーストで使える具体的なコード例を記載してください。**
+
+### メタディスクリプションの設定
+\`\`\`html
+<meta name="description" content="具体例を記載">
+\`\`\`
+
+### 構造化データの実装
+\`\`\`html
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "記事タイトル",
+  ...
+}
+</script>
+\`\`\`
+
+（その他の項目も同様に、必ずコード例を記載）
+
+## 4. 期待される効果
+
+改善後に期待できる具体的な効果：
+- 検索順位への影響
+- CTR改善の見込み
+- その他のSEO効果
+
+## 5. 実装時の注意点
+
+- よくある間違いと回避方法
+- Google公式ガイドラインで推奨されている方法
+- チェックツールの活用方法
+
+**重要**: 全てのセクションに具体的な内容を記載してください。特に「3. 具体的な実装手順」では、実際に使えるコード例を必ず含めてください。
 `;
 
   return prompt;
@@ -191,7 +225,7 @@ async function callOpenAIAPI(apiKey, priorityResults, parsedData) {
       messages: [
         {
           role: 'system',
-          content: 'あなたはGoogle Search Central公式ガイドラインに精通したSEO専門家です。具体的で実行可能な改善提案を提供します。'
+          content: 'あなたはGoogle Search Central公式ガイドラインに精通したSEO専門家です。具体的で実行可能な改善提案を提供します。必ず全てのセクションに詳細な内容とコード例を含めてください。'
         },
         {
           role: 'user',
@@ -199,7 +233,7 @@ async function callOpenAIAPI(apiKey, priorityResults, parsedData) {
         }
       ],
       temperature: 0.7,
-      max_tokens: 2500
+      max_tokens: 4000
     })
   });
 
@@ -227,7 +261,8 @@ async function callClaudeAPI(apiKey, priorityResults, parsedData) {
     },
     body: JSON.stringify({
       model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2500,
+      max_tokens: 4000,
+      system: 'あなたはGoogle Search Central公式ガイドラインに精通したSEO専門家です。具体的で実行可能な改善提案を提供します。必ず全てのセクションに詳細な内容とコード例を含めてください。',
       messages: [
         {
           role: 'user',
@@ -271,7 +306,14 @@ async function callGeminiAPI(apiKey, priorityResults, parsedData) {
         ],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2500
+          maxOutputTokens: 4000
+        },
+        systemInstruction: {
+          parts: [
+            {
+              text: 'あなたはGoogle Search Central公式ガイドラインに精通したSEO専門家です。具体的で実行可能な改善提案を提供します。必ず全てのセクションに詳細な内容とコード例を含めてください。'
+            }
+          ]
         }
       })
     }
