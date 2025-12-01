@@ -210,14 +210,14 @@ class KeywordExtractor {
     words.push(...englishWords);
 
     // 日本語の単語を抽出
-    // 1. まず長い単語を抽出（2-15文字）
-    const longJapaneseWords = text.match(/[ぁ-んァ-ヶー一-龠]{2,15}/g) || [];
+    // 1. まず長い単語を抽出（2-30文字）
+    const longJapaneseWords = text.match(/[ぁ-んァ-ヶー一-龠]{2,30}/g) || [];
     words.push(...longJapaneseWords);
 
     // 2. 混合語（カタカナ+漢字など）も抽出
     const mixedWords = text.match(/[ぁ-んァ-ヶー一-龠]+/g) || [];
     mixedWords.forEach(word => {
-      if (word.length >= 2 && word.length <= 15) {
+      if (word.length >= 2 && word.length <= 30) {
         words.push(word);
       }
     });
@@ -230,7 +230,7 @@ class KeywordExtractor {
    */
   isValidKeyword(word) {
     // 長さチェック
-    if (word.length < 2 || word.length > 20) return false;
+    if (word.length < 2 || word.length > 30) return false;
 
     // ストップワードチェック
     if (this.stopwords.has(word)) return false;
